@@ -1,0 +1,49 @@
+$ npm run check
+
+> ordertrack-client@0.1.0 check
+> node --check next.config.mjs && node --check postcss.config.mjs && node --check tailwind.config.js
+
+exit=0
+$ npm test
+
+> ordertrack-client@0.1.0 test
+> node --test test/client-shell.test.js
+
+✔ root shell keeps its accessible, empty-state foundation (1.817625ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.809334
+exit=0
+$ npm run build
+
+> ordertrack-client@0.1.0 build
+> next build
+
+▲ Next.js 16.4.6 (Turbopack)
+✓ Running next.config.mjs took 9ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1656ms
+  Running TypeScript ...
+  Finished TypeScript in 4ms ...
+  Collecting page data using 4 workers ...
+  Generating static pages using 4 workers (0/3) ...
+✓ Generating static pages using 4 workers (3/3) in 256ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+
+
+○  (Static)  prerendered as static content
+
+exit=0
+$ npm audit --omit=dev
+found 0 vulnerabilities
+exit=0

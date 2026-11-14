@@ -1,0 +1,31 @@
+$ git ls-files client/next.config*
+client/next.config.mjs
+$ grep -R --line-number --include="next.config*" --exclude-dir=node_modules --exclude-dir=.next "source: /api/:path*\|destination:" client
+client/next.config.mjs:11:        source: '/api/:path*',
+client/next.config.mjs:12:        destination: `${apiServerUrl}/api/:path*`,
+$ template comments and nonblank entries
+client/.env.example:1:# Client project environment template.
+client/.env.example:2:# Keep values blank. Browser requests use same-origin /api/*.
+client/.env.example:3:# API_SERVER_URL is read by next.config.mjs for the server-side rewrite only.
+client/.env.example:4:API_SERVER_URL=
+server/.env.example:1:# Server project environment template.
+server/.env.example:2:# Keep values blank. Set values in local or Vercel environment settings.
+server/.env.example:4:# Database
+server/.env.example:5:MONGODB_URI=
+server/.env.example:7:# Authentication
+server/.env.example:8:JWT_SECRET=
+server/.env.example:9:JWT_EXPIRES_IN=
+server/.env.example:10:AUTH_COOKIE_NAME=
+server/.env.example:11:AUTH_COOKIE_SECURE=
+server/.env.example:13:# API access
+server/.env.example:14:CORS_ORIGIN=
+server/.env.example:15:PORT=3000
+server/.env.example:17:# Future storage settings; not used by this baseline.
+server/.env.example:18:STORAGE_PROVIDER=
+server/.env.example:19:STORAGE_BUCKET=
+server/.env.example:20:STORAGE_REGION=
+server/.env.example:21:STORAGE_ENDPOINT=
+server/.env.example:22:STORAGE_ACCESS_KEY_ID=
+server/.env.example:23:STORAGE_SECRET_ACCESS_KEY=
+server/.env.example:25:# Future Vercel Cron protection; not used by this baseline.
+server/.env.example:26:CRON_SECRET=

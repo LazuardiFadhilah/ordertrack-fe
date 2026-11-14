@@ -1,0 +1,23 @@
+{
+  "name": "ordertrack-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "check": "node --check next.config.mjs && node --check postcss.config.mjs && node --check tailwind.config.js",
+    "test": "node --test test/client-shell.test.js"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.4.20",
+    "postcss": "8.5.33",
+    "tailwindcss": "3.4.17"
+  }
+}

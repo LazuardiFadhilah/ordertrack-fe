@@ -1,0 +1,9 @@
+$ find client -maxdepth 1 -type f -name "next.config.*" -print
+client/next.config.mjs
+$ API_SERVER_URL=https://server.example.test node rewrite probe
+[
+  {
+    "source": "/api/:path*",
+    "destination": "https://server.example.test/api/:path*"
+  }
+]

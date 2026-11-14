@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Geist Local";
+  src: local("Geist"), local("Inter"), local("Arial");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk Local";
+  src: local("Space Grotesk"), local("Arial Narrow"), local("Arial");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  --font-geist: "Geist Local", ui-sans-serif, system-ui, sans-serif;
+  --font-space-grotesk: "Space Grotesk Local", ui-sans-serif, system-ui, sans-serif;
+  color-scheme: light;
+  background: #faf8ff;
+  font-family: var(--font-geist);
+}
+
+* {
+  border-radius: 0;
+}
+
+html {
+  min-width: 320px;
+  background: #faf8ff;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #faf8ff;
+  color: #131b2e;
+}
+
+::selection {
+  background: #3730a3;
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 3px solid #3730a3;
+  outline-offset: 3px;
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-on-surface-variant;
+  }
+
+  .ledger-label {
+    @apply font-sans text-xs font-medium uppercase tracking-[0.12em] text-on-surface-variant;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
