@@ -1,3 +1,9 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCurrentUser, logout } from './auth-client.js';
+
 const navigation = [
   { label: 'Overview', glyph: '◈', active: true },
   { label: 'Sales orders', glyph: '▤' },
@@ -111,7 +117,40 @@ function SystemPanel() {
   );
 }
 
+function SessionLoading() {
+  return <main aria-live="polite" className="flex min-h-screen items-center justify-center bg-surface px-4"><p className="eyebrow text-primary">Verifying session…</p></main>;
+}
+
 export default function HomePage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getCurrentUser().then((currentUser) => {
+      if (active) {
+        setUser(currentUser);
+        setIsChecking(false);
+      }
+    }).catch(() => {
+      if (active) router.replace('/login');
+    });
+    return () => { active = false; };
+  }, [router]);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      router.replace('/login');
+    }
+  }
+
+  if (isChecking || !user) return <SessionLoading />;
+
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <a className="sr-only absolute left-3 top-3 z-50 bg-primary px-4 py-3 text-sm font-semibold text-on-primary focus:not-sr-only" href="#main-content">
@@ -143,12 +182,19 @@ export default function HomePage() {
                 <p className="eyebrow">Order-to-cash workspace</p>
                 <p className="mt-1 text-sm text-on-surface-variant">Client foundation / overview</p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-2 border border-outline-variant bg-surface-container-low px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-on-surface-variant">
-                  <span aria-hidden="true" className="h-2 w-2 bg-emerald-600" />
-                  Preview
-                </span>
-                <span className="border border-outline-variant px-3 py-2 font-mono text-xs tabular text-on-surface-variant">v0.1</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="border border-outline-variant bg-surface-container-low px-3 py-2 text-right">
+                  <p className="text-sm font-semibold text-on-surface">{user.name}</p>
+                  <p className="font-mono text-xs tabular text-on-surface-variant">{user.role} · {user.email}</p>
+                </div>
+                <button
+                  className="min-h-10 border border-primary px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:bg-surface-container-high disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isLoggingOut}
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  {isLoggingOut ? 'Signing out…' : 'Sign out'}
+                </button>
               </div>
             </div>
           </header>
