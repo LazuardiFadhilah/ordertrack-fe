@@ -31,7 +31,7 @@ function NavItem({ item, onNavigate }) {
   return (
     <a
       aria-current={item.active ? 'page' : undefined}
-      className={`group flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${item.active ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+      className={`group flex min-h-11 min-w-0 items-center gap-3 rounded-r-md border-l-2 px-3 py-2 text-sm font-semibold transition-colors ${item.active ? 'border-primary bg-primary/5 text-primary' : 'border-transparent text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'}`}
       href={item.active ? '#main-content' : `#${item.label.toLowerCase().replaceAll(' ', '-')}`}
       onClick={onNavigate}
     >
@@ -183,7 +183,7 @@ export default function HomePage() {
       </a>
 
       <header className="sticky top-0 z-30 border-b border-outline-variant/80 bg-surface-container-lowest">
-        <div className="mx-auto flex min-h-20 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-8 lg:px-8">
+        <div className="mx-auto flex min-h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <button
             ref={menuButtonRef}
             aria-controls="mobile-navigation"
@@ -232,7 +232,7 @@ export default function HomePage() {
             className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col overflow-y-auto border-r border-outline-variant bg-surface-container-lowest shadow-xl lg:hidden"
             role="dialog"
           >
-            <div className="flex min-h-20 items-center justify-between border-b border-outline-variant px-4">
+            <div className="flex min-h-16 items-center justify-between border-b border-outline-variant px-4">
               <p id="mobile-navigation-title" className="eyebrow text-primary">Application navigation</p>
               <button
                 ref={mobileNavCloseRef}
@@ -244,29 +244,21 @@ export default function HomePage() {
                 <FiX aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
-            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-4">
+            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
+              <p className="px-3 pb-2 eyebrow">Workspace</p>
               <NavigationList onNavigate={() => setIsMobileNavOpen(false)} />
             </nav>
-            <div className="mt-auto border-t border-outline-variant/80 px-5 py-5">
-              <p className="eyebrow">Environment</p>
-              <p className="mt-2 text-sm font-semibold text-on-surface">Foundation</p>
-              <p className="mt-1 text-xs leading-5 text-on-surface-variant">UI only · no live records</p>
-            </div>
           </aside>
         </>
       )}
 
-      <div className="flex min-h-[calc(100vh-5rem)]">
+      <div className="flex min-h-[calc(100vh-4rem)]">
         <aside aria-label="Application navigation" className="hidden w-60 shrink-0 border-r border-outline-variant/80 bg-surface-container-lowest lg:block">
-          <div className="sticky top-20 flex max-h-[calc(100vh-5rem)] flex-col overflow-y-auto">
+          <div className="sticky top-16 flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto">
             <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
+              <p className="px-3 pb-2 eyebrow">Workspace</p>
               <NavigationList />
             </nav>
-            <div className="mt-auto border-t border-outline-variant/80 px-5 py-5">
-              <p className="eyebrow">Environment</p>
-              <p className="mt-2 text-sm font-semibold text-on-surface">Foundation</p>
-              <p className="mt-1 text-xs leading-5 text-on-surface-variant">UI only · no live records</p>
-            </div>
           </div>
         </aside>
 
@@ -274,15 +266,13 @@ export default function HomePage() {
           <div className="mx-auto max-w-[1440px]">
             <div className="mb-7 flex flex-col gap-4 border-b border-outline-variant/80 pb-7 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="eyebrow text-primary">Operational command surface</p>
-                <h1 className="mt-2 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
+                <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
                   A clear starting point for every handoff.
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">
                   The shell is in place. It will stay quiet until an approved screen contract provides real operational records.
                 </p>
               </div>
-              <p className="font-mono text-xs tabular text-on-surface-variant">ROUTE / OVERVIEW</p>
             </div>
 
             <div className="grid gap-6 xl:grid-cols-12">

@@ -29,6 +29,11 @@ test('root shell keeps its accessible, empty-state foundation', () => {
   assert.match(page, /<main id="main-content"/);
   assert.match(page, /Skip to main content/);
   assert.match(page, /No operational data loaded/);
+  assert.match(page, /min-h-16/);
+  assert.match(page, /Workspace/);
+  assert.match(page, /border-l-2/);
+  assert.doesNotMatch(page, /Environment/);
+  assert.doesNotMatch(page, /ROUTE \/ OVERVIEW/);
   assert.match(page, /components\/ui\/button/);
   assert.match(page, /rounded-(md|lg)/);
   assert.doesNotMatch(styles, /border-radius:\s*0/);
