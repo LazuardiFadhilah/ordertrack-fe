@@ -19,10 +19,11 @@ export default {
         primary: '#1F108E',
         'primary-container': '#3730A3',
         'on-primary': '#FFFFFF',
+        danger: '#BA1A1A',
       },
       fontFamily: {
-        display: ['var(--font-space-grotesk)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-geist)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-montserrat)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-montserrat)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         none: 'none',

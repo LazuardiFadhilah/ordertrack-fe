@@ -3,31 +3,18 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "Geist Local";
-  src: local("Geist"), local("Inter"), local("Arial");
+  font-family: "Montserrat Local";
+  src: local("Montserrat"), local("Montserrat Variable");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
 }
 
-@font-face {
-  font-family: "Space Grotesk Local";
-  src: local("Space Grotesk"), local("Arial Narrow"), local("Arial");
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-}
-
 :root {
-  --font-geist: "Geist Local", ui-sans-serif, system-ui, sans-serif;
-  --font-space-grotesk: "Space Grotesk Local", ui-sans-serif, system-ui, sans-serif;
+  --font-montserrat: "Montserrat Local", "Montserrat", ui-sans-serif, system-ui, sans-serif;
   color-scheme: light;
   background: #faf8ff;
-  font-family: var(--font-geist);
-}
-
-* {
-  border-radius: 0;
+  font-family: var(--font-montserrat);
 }
 
 html {
@@ -54,14 +41,25 @@ body {
 
 @layer components {
   .eyebrow {
-    @apply font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-on-surface-variant;
+    @apply font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-on-surface-variant;
   }
 
   .ledger-label {
-    @apply font-sans text-xs font-medium uppercase tracking-[0.12em] text-on-surface-variant;
+    @apply font-sans text-xs font-semibold uppercase tracking-[0.1em] text-on-surface-variant;
   }
 
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

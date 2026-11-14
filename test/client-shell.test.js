@@ -24,7 +24,9 @@ test('root shell keeps its accessible, empty-state foundation', () => {
   assert.match(page, /<main id="main-content"/);
   assert.match(page, /Skip to main content/);
   assert.match(page, /No operational data loaded/);
-  assert.match(styles, /\*\s*\{\s*border-radius: 0;/);
+  assert.match(page, /components\/ui\/button/);
+  assert.match(page, /rounded-(md|lg)/);
+  assert.doesNotMatch(styles, /border-radius:\s*0/);
   assert.match(styles, /:focus-visible\s*\{[\s\S]*outline: 3px solid/);
 });
 

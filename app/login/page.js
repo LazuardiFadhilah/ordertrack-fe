@@ -2,7 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { FiAlertCircle, FiArrowRight, FiCheckCircle, FiLock, FiShield } from 'react-icons/fi';
+import { Button } from '../../components/ui/button.js';
+import { Input } from '../../components/ui/input.js';
 import { GENERIC_AUTH_ERROR, login, validateLogin } from '../auth-client.js';
+
+function BrandMark() {
+  return (
+    <span aria-hidden="true" className="grid h-9 w-9 shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-primary p-1.5 shadow-sm">
+      <span className="rounded-[2px] bg-on-primary" />
+      <span className="rounded-[2px] bg-primary" />
+      <span className="rounded-[2px] bg-primary" />
+      <span className="rounded-[2px] bg-on-primary" />
+    </span>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,71 +62,85 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-surface px-4 py-6 text-on-surface sm:px-6 sm:py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl items-center justify-center sm:min-h-[calc(100vh-5rem)]">
-        <section aria-labelledby="login-title" className="grid w-full max-w-5xl border border-outline-variant bg-surface-container-lowest lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="hidden border-r border-outline-variant bg-surface-container-low p-8 lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <main className="min-h-screen bg-surface px-4 py-5 text-on-surface sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-6xl items-center justify-center sm:min-h-[calc(100vh-4rem)]">
+        <section aria-labelledby="login-title" className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-outline-variant/80 bg-surface-container-lowest shadow-xl shadow-primary/5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="hidden overflow-hidden bg-primary p-10 text-on-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
             <div>
               <div className="flex items-center gap-3">
-                <span aria-hidden="true" className="grid h-8 w-8 shrink-0 grid-cols-2 gap-px bg-primary p-1">
-                  <span className="bg-on-primary" />
-                  <span className="bg-primary" />
-                  <span className="bg-primary" />
-                  <span className="bg-on-primary" />
-                </span>
+                <BrandMark />
                 <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
               </div>
-              <p className="eyebrow mt-16 text-primary">Operational command surface</p>
-              <h1 className="mt-3 max-w-md font-display text-4xl font-semibold tracking-tight text-on-surface">
-                Keep every handoff visible.
-              </h1>
-              <p className="mt-5 max-w-md text-sm leading-6 text-on-surface-variant">
-                Sign in to the OrderTrack workspace to follow order-to-cash operations from quotation through payment.
-              </p>
+              <div className="mt-24 max-w-md">
+                <p className="eyebrow text-indigo-200">Operational command surface</p>
+                <h1 className="mt-4 font-display text-5xl font-semibold leading-[1.05] tracking-[-0.04em]">
+                  Keep every handoff visible.
+                </h1>
+                <p className="mt-6 text-sm leading-7 text-indigo-100">
+                  Follow order-to-cash operations from quotation through payment in one focused workspace.
+                </p>
+              </div>
+              <dl className="mt-10 overflow-hidden rounded-xl border border-white/15 text-sm">
+                <div className="flex items-center justify-between gap-4 border-b border-white/15 px-4 py-3">
+                  <dt className="text-indigo-200">Surface</dt>
+                  <dd className="font-semibold">Overview</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 border-b border-white/15 px-4 py-3">
+                  <dt className="text-indigo-200">Access</dt>
+                  <dd className="font-semibold">Role-aware</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 px-4 py-3">
+                  <dt className="text-indigo-200">Session</dt>
+                  <dd className="flex items-center gap-2 font-semibold"><FiCheckCircle aria-hidden="true" className="h-4 w-4 text-indigo-200" />HttpOnly</dd>
+                </div>
+              </dl>
             </div>
-            <p className="font-mono text-xs tabular text-on-surface-variant">AUTH / SESSION GATE</p>
+            <div className="flex items-center justify-between gap-4 border-t border-white/15 pt-5 text-xs text-indigo-200">
+              <span>ORDERTRACK / ACCESS</span>
+              <span className="font-medium">FOUNDATION</span>
+            </div>
           </div>
 
-          <div className="p-5 sm:p-8 lg:p-12">
-            <div className="mb-8 lg:hidden">
+          <div className="p-5 sm:p-9 lg:p-12">
+            <div className="mb-10 flex items-center justify-between gap-4 lg:hidden">
               <div className="flex items-center gap-3">
-                <span aria-hidden="true" className="grid h-8 w-8 shrink-0 grid-cols-2 gap-px bg-primary p-1">
-                  <span className="bg-on-primary" />
-                  <span className="bg-primary" />
-                  <span className="bg-primary" />
-                  <span className="bg-on-primary" />
-                </span>
+                <BrandMark />
                 <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
               </div>
+              <span className="rounded-full bg-surface-container px-3 py-1.5 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-primary">Secure access</span>
             </div>
 
-            <p className="eyebrow text-primary">Secure workspace access</p>
-            <h2 id="login-title" className="mt-2 font-display text-3xl font-semibold tracking-tight text-on-surface">
-              Sign in
+            <div className="flex items-center gap-2 text-primary">
+              <FiShield aria-hidden="true" className="h-4 w-4" />
+              <p className="eyebrow text-primary">Secure workspace access</p>
+            </div>
+            <h2 id="login-title" className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-on-surface sm:text-4xl">
+              Welcome back
             </h2>
-            <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-              Use your approved OrderTrack account to continue.
+            <p className="mt-3 max-w-md text-sm leading-6 text-on-surface-variant">
+              Use your approved OrderTrack account to continue to the operations workspace.
             </p>
 
             {message && (
               <div
                 aria-live="polite"
-                className={`mt-6 border px-4 py-3 text-sm leading-6 ${status === 'success' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : status === 'error' ? 'border-red-300 bg-red-50 text-red-800' : 'border-outline-variant bg-surface-container-low text-on-surface-variant'}`}
+                className={`mt-6 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm leading-6 ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : status === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-outline-variant bg-surface-container-low text-on-surface-variant'}`}
                 role={status === 'error' ? 'alert' : 'status'}
               >
-                {message}
+                {status === 'success' ? <FiCheckCircle aria-hidden="true" className="mt-1 h-4 w-4 shrink-0" /> : <FiAlertCircle aria-hidden="true" className="mt-1 h-4 w-4 shrink-0" />}
+                <span>{message}</span>
               </div>
             )}
 
             <form className="mt-8 space-y-5" noValidate onSubmit={handleSubmit}>
               <div>
                 <label className="ledger-label block" htmlFor="email">Email address</label>
-                <input
+                <Input
                   aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                   aria-invalid={Boolean(fieldErrors.email)}
                   autoComplete="email"
-                  className="mt-2 block min-h-11 w-full border border-outline bg-surface-container-lowest px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none"
                   disabled={isLoading}
+                  invalid={Boolean(fieldErrors.email)}
                   id="email"
                   name="email"
                   onChange={(event) => updateField('email', event.target.value)}
@@ -124,12 +152,12 @@ export default function LoginPage() {
 
               <div>
                 <label className="ledger-label block" htmlFor="password">Password</label>
-                <input
+                <Input
                   aria-describedby={fieldErrors.password ? 'password-error' : undefined}
                   aria-invalid={Boolean(fieldErrors.password)}
                   autoComplete="current-password"
-                  className="mt-2 block min-h-11 w-full border border-outline bg-surface-container-lowest px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none"
                   disabled={isLoading}
+                  invalid={Boolean(fieldErrors.password)}
                   id="password"
                   name="password"
                   onChange={(event) => updateField('password', event.target.value)}
@@ -139,18 +167,16 @@ export default function LoginPage() {
                 {fieldErrors.password && <p className="mt-2 text-sm text-red-800" id="password-error">{fieldErrors.password}</p>}
               </div>
 
-              <button
-                className="inline-flex min-h-11 w-full items-center justify-center bg-primary px-4 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isLoading}
-                type="submit"
-              >
+              <Button aria-busy={isLoading} className="mt-2 w-full" disabled={isLoading} type="submit">
                 {isLoading ? 'Signing in…' : 'Sign in'}
-              </button>
+                {!isLoading && <FiArrowRight aria-hidden="true" className="h-4 w-4" />}
+              </Button>
             </form>
 
-            <p className="mt-8 border-t border-outline-variant pt-4 text-xs leading-5 text-on-surface-variant">
-              Access is verified by the OrderTrack service. Session cookies remain unavailable to browser scripts.
-            </p>
+            <div className="mt-9 flex items-start gap-3 border-t border-outline-variant pt-5 text-xs leading-5 text-on-surface-variant">
+              <FiLock aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p>Access is verified by the OrderTrack service. Session cookies remain unavailable to browser scripts.</p>
+            </div>
           </div>
         </section>
       </div>
