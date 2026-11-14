@@ -21,6 +21,11 @@ test('root shell keeps its accessible, empty-state foundation', () => {
 
   assert.match(layout, /<html lang="en">/);
   assert.match(page, /<aside aria-label="Application navigation"/);
+  assert.match(page, /aria-controls="mobile-navigation"/);
+  assert.match(page, /aria-expanded=\{isMobileNavOpen\}/);
+  assert.match(page, /aria-labelledby="mobile-navigation-title"/);
+  assert.match(page, /key === 'Escape'/);
+  assert.match(page, /Close navigation backdrop/);
   assert.match(page, /<main id="main-content"/);
   assert.match(page, /Skip to main content/);
   assert.match(page, /No operational data loaded/);

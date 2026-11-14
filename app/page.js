@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiActivity, FiCheckCircle, FiClipboard, FiDatabase, FiFileText, FiGrid, FiLogOut, FiShield, FiUser } from 'react-icons/fi';
+import { FiActivity, FiCheckCircle, FiClipboard, FiDatabase, FiFileText, FiGrid, FiLogOut, FiMenu, FiShield, FiUser, FiX } from 'react-icons/fi';
 import { Button } from '../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../components/ui/card.js';
 import { getCurrentUser, logout } from './auth-client.js';
@@ -25,19 +25,24 @@ function BrandMark() {
   );
 }
 
-function NavItem({ item }) {
+function NavItem({ item, onNavigate }) {
   const Icon = item.icon;
 
   return (
     <a
       aria-current={item.active ? 'page' : undefined}
-      className={`group flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg px-1 py-2 text-[0.65rem] font-semibold transition-colors md:gap-3 md:px-3 md:text-sm lg:justify-start ${item.active ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+      className={`group flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${item.active ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
       href={item.active ? '#main-content' : `#${item.label.toLowerCase().replaceAll(' ', '-')}`}
+      onClick={onNavigate}
     >
-      <Icon aria-hidden="true" className="hidden h-[1.1rem] w-[1.1rem] shrink-0 md:block" />
-      <span className="whitespace-nowrap md:sr-only lg:not-sr-only">{item.label}</span>
+      <Icon aria-hidden="true" className="h-[1.1rem] w-[1.1rem] shrink-0" />
+      <span className="whitespace-nowrap">{item.label}</span>
     </a>
   );
+}
+
+function NavigationList({ onNavigate }) {
+  return navigation.map((item) => <NavItem key={item.label} item={item} onNavigate={onNavigate} />);
 }
 
 function PlaceholderPanel() {
@@ -120,6 +125,10 @@ export default function HomePage() {
   const [user, setUser] = useState(null);
   const [isChecking, setIsChecking] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const menuButtonRef = useRef(null);
+  const mobileNavCloseRef = useRef(null);
+  const wasMobileNavOpen = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -134,6 +143,28 @@ export default function HomePage() {
     return () => { active = false; };
   }, [router]);
 
+  useEffect(() => {
+    if (!isMobileNavOpen) {
+      if (wasMobileNavOpen.current) menuButtonRef.current?.focus();
+      wasMobileNavOpen.current = false;
+      return undefined;
+    }
+
+    wasMobileNavOpen.current = true;
+    mobileNavCloseRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsMobileNavOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileNavOpen]);
+
   async function handleLogout() {
     setIsLoggingOut(true);
     try {
@@ -146,79 +177,125 @@ export default function HomePage() {
   if (isChecking || !user) return <SessionLoading />;
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
-      <a className="sr-only absolute left-3 top-3 z-50 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-on-primary focus:not-sr-only" href="#main-content">
+    <div className="min-h-screen overflow-x-hidden bg-surface text-on-surface">
+      <a className="sr-only absolute left-3 top-3 z-[60] rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-on-primary focus:not-sr-only" href="#main-content">
         Skip to main content
       </a>
-      <div className="flex min-h-screen flex-col md:flex-row">
-        <aside aria-label="Application navigation" className="border-b border-outline-variant/80 bg-surface-container-lowest md:w-16 md:border-b-0 md:border-r lg:w-60">
-          <div className="flex items-center justify-between gap-3 border-b border-outline-variant/80 px-4 py-4 md:h-20 md:justify-center md:px-0 lg:justify-start lg:px-5">
-            <a className="flex items-center gap-3 text-on-surface" href="#main-content" aria-label="OrderTrack overview">
-              <BrandMark />
-              <span className="font-display text-lg font-bold tracking-tight md:sr-only lg:not-sr-only">OrderTrack</span>
-            </a>
-            <span className="rounded-full bg-surface-container px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-[0.12em] text-primary md:hidden">Client shell</span>
+
+      <header className="sticky top-0 z-30 border-b border-outline-variant/80 bg-surface-container-lowest">
+        <div className="mx-auto flex min-h-20 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-8 lg:px-8">
+          <button
+            ref={menuButtonRef}
+            aria-controls="mobile-navigation"
+            aria-expanded={isMobileNavOpen}
+            aria-label="Open navigation menu"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2 lg:hidden"
+            onClick={() => setIsMobileNavOpen(true)}
+            type="button"
+          >
+            <FiMenu aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          <a className="flex shrink-0 items-center gap-3 text-on-surface" href="#main-content" aria-label="OrderTrack overview">
+            <BrandMark />
+            <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
+          </a>
+
+          <div className="hidden min-w-0 flex-1 border-l border-outline-variant pl-6 sm:block">
+            <p className="eyebrow truncate">Order-to-cash workspace</p>
+            <p className="mt-1 truncate text-sm text-on-surface-variant">Client foundation / overview</p>
           </div>
-          <nav aria-label="Primary" className="grid grid-cols-4 gap-1 px-3 py-3 md:block md:px-2 lg:px-3">
-            {navigation.map((item) => <NavItem key={item.label} item={item} />)}
-          </nav>
-          <div className="hidden border-t border-outline-variant/80 px-5 py-5 lg:block">
-            <p className="eyebrow">Environment</p>
-            <p className="mt-2 text-sm font-semibold text-on-surface">Foundation</p>
-            <p className="mt-1 text-xs leading-5 text-on-surface-variant">UI only · no live records</p>
+
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2 sm:gap-3 sm:px-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><FiUser aria-hidden="true" className="h-4 w-4" /></span>
+              <div className="hidden min-w-0 max-w-[13rem] sm:block">
+                <p className="truncate text-sm font-semibold text-on-surface">{user.name}</p>
+                <p className="truncate font-mono text-[0.6875rem] tabular text-on-surface-variant">{user.role} · {user.email}</p>
+              </div>
+            </div>
+            <Button aria-label="Sign out" className="shrink-0 px-3 sm:px-4" disabled={isLoggingOut} onClick={handleLogout} type="button" variant="outline">
+              <FiLogOut aria-hidden="true" className="h-4 w-4" />
+              <span className="hidden lg:inline">{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {isMobileNavOpen && (
+        <>
+          <button aria-label="Close navigation backdrop" className="fixed inset-0 z-40 bg-on-surface/45 lg:hidden" onClick={() => setIsMobileNavOpen(false)} type="button" />
+          <aside
+            id="mobile-navigation"
+            aria-labelledby="mobile-navigation-title"
+            aria-modal="true"
+            className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col overflow-y-auto border-r border-outline-variant bg-surface-container-lowest shadow-xl lg:hidden"
+            role="dialog"
+          >
+            <div className="flex min-h-20 items-center justify-between border-b border-outline-variant px-4">
+              <p id="mobile-navigation-title" className="eyebrow text-primary">Application navigation</p>
+              <button
+                ref={mobileNavCloseRef}
+                aria-label="Close navigation menu"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2"
+                onClick={() => setIsMobileNavOpen(false)}
+                type="button"
+              >
+                <FiX aria-hidden="true" className="h-5 w-5" />
+              </button>
+            </div>
+            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-4">
+              <NavigationList onNavigate={() => setIsMobileNavOpen(false)} />
+            </nav>
+            <div className="mt-auto border-t border-outline-variant/80 px-5 py-5">
+              <p className="eyebrow">Environment</p>
+              <p className="mt-2 text-sm font-semibold text-on-surface">Foundation</p>
+              <p className="mt-1 text-xs leading-5 text-on-surface-variant">UI only · no live records</p>
+            </div>
+          </aside>
+        </>
+      )}
+
+      <div className="flex min-h-[calc(100vh-5rem)]">
+        <aside aria-label="Application navigation" className="hidden w-60 shrink-0 border-r border-outline-variant/80 bg-surface-container-lowest lg:block">
+          <div className="sticky top-20 flex max-h-[calc(100vh-5rem)] flex-col overflow-y-auto">
+            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
+              <NavigationList />
+            </nav>
+            <div className="mt-auto border-t border-outline-variant/80 px-5 py-5">
+              <p className="eyebrow">Environment</p>
+              <p className="mt-2 text-sm font-semibold text-on-surface">Foundation</p>
+              <p className="mt-1 text-xs leading-5 text-on-surface-variant">UI only · no live records</p>
+            </div>
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="border-b border-outline-variant/80 bg-surface-container-lowest px-4 py-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <main id="main-content" className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+          <div className="mx-auto max-w-[1440px]">
+            <div className="mb-7 flex flex-col gap-4 border-b border-outline-variant/80 pb-7 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="eyebrow">Order-to-cash workspace</p>
-                <p className="mt-1 text-sm text-on-surface-variant">Client foundation / overview</p>
+                <p className="eyebrow text-primary">Operational command surface</p>
+                <h1 className="mt-2 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
+                  A clear starting point for every handoff.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">
+                  The shell is in place. It will stay quiet until an approved screen contract provides real operational records.
+                </p>
               </div>
-              <div className="flex items-center justify-between gap-3 sm:justify-end">
-                <div className="flex min-w-0 items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><FiUser aria-hidden="true" className="h-4 w-4" /></span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-on-surface">{user.name}</p>
-                    <p className="truncate font-mono text-[0.6875rem] tabular text-on-surface-variant">{user.role} · {user.email}</p>
-                  </div>
-                </div>
-                <Button aria-label="Sign out" className="shrink-0 px-3 sm:px-4" disabled={isLoggingOut} onClick={handleLogout} type="button" variant="outline">
-                  <FiLogOut aria-hidden="true" className="h-4 w-4" />
-                  <span className="hidden sm:inline">{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
-                </Button>
-              </div>
+              <p className="font-mono text-xs tabular text-on-surface-variant">ROUTE / OVERVIEW</p>
             </div>
-          </header>
 
-          <main id="main-content" className="flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-            <div className="mx-auto max-w-[1440px]">
-              <div className="mb-7 flex flex-col gap-4 border-b border-outline-variant/80 pb-7 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="eyebrow text-primary">Operational command surface</p>
-                  <h1 className="mt-2 max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
-                    A clear starting point for every handoff.
-                  </h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">
-                    The shell is in place. It will stay quiet until an approved screen contract provides real operational records.
-                  </p>
-                </div>
-                <p className="font-mono text-xs tabular text-on-surface-variant">ROUTE / OVERVIEW</p>
-              </div>
-
-              <div className="grid gap-6 xl:grid-cols-12">
-                <div className="min-w-0 xl:col-span-8"><PlaceholderPanel /></div>
-                <div className="min-w-0 xl:col-span-4"><SystemPanel /></div>
-              </div>
-
-              <footer className="mt-8 flex flex-col gap-2 border-t border-outline-variant/80 pt-4 text-xs text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
-                <p>OrderTrack client scaffold</p>
-                <p className="font-mono tabular">NO LIVE DATA · UI FOUNDATION</p>
-              </footer>
+            <div className="grid gap-6 xl:grid-cols-12">
+              <div className="min-w-0 xl:col-span-8"><PlaceholderPanel /></div>
+              <div className="min-w-0 xl:col-span-4"><SystemPanel /></div>
             </div>
-          </main>
-        </div>
+
+            <footer className="mt-8 flex flex-col gap-2 border-t border-outline-variant/80 pt-4 text-xs text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
+              <p>OrderTrack client scaffold</p>
+              <p className="font-mono tabular">NO LIVE DATA · UI FOUNDATION</p>
+            </footer>
+          </div>
+        </main>
       </div>
     </div>
   );
