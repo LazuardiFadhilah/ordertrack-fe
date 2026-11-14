@@ -14,6 +14,8 @@ const navigation = [
   { label: 'Activity', icon: FiActivity },
 ];
 
+const shellHeaderHeight = 'h-16 lg:h-20';
+
 function BrandMark() {
   return (
     <span aria-hidden="true" className="grid h-9 w-9 shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-primary p-1.5 shadow-sm">
@@ -182,110 +184,116 @@ export default function HomePage() {
         Skip to main content
       </a>
 
-      <header className="sticky top-0 z-30 border-b border-outline-variant/80 bg-surface-container-lowest">
-        <div className="mx-auto flex min-h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
-          <button
-            ref={menuButtonRef}
-            aria-controls="mobile-navigation"
-            aria-expanded={isMobileNavOpen}
-            aria-label="Open navigation menu"
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2 lg:hidden"
-            onClick={() => setIsMobileNavOpen(true)}
-            type="button"
-          >
-            <FiMenu aria-hidden="true" className="h-5 w-5" />
-          </button>
-
-          <a className="flex shrink-0 items-center gap-3 text-on-surface" href="#main-content" aria-label="OrderTrack overview">
-            <BrandMark />
-            <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
-          </a>
-
-          <div className="hidden min-w-0 flex-1 border-l border-outline-variant pl-6 sm:block">
-            <p className="eyebrow truncate">Order-to-cash workspace</p>
-            <p className="mt-1 truncate text-sm text-on-surface-variant">Client foundation / overview</p>
+      <div className="grid min-h-screen lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside aria-label="Application navigation" className="sticky top-0 hidden h-screen min-h-0 flex-col border-r border-outline-variant/80 bg-surface-container-lowest lg:flex">
+          <div className={`${shellHeaderHeight} flex shrink-0 items-center border-b border-outline-variant/80 px-5`}>
+            <a className="flex items-center gap-3 text-on-surface" href="#main-content" aria-label="OrderTrack overview">
+              <BrandMark />
+              <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
+            </a>
           </div>
-
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-            <div className="flex min-w-0 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2 sm:gap-3 sm:px-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><FiUser aria-hidden="true" className="h-4 w-4" /></span>
-              <div className="hidden min-w-0 max-w-[13rem] sm:block">
-                <p className="truncate text-sm font-semibold text-on-surface">{user.name}</p>
-                <p className="truncate font-mono text-[0.6875rem] tabular text-on-surface-variant">{user.role} · {user.email}</p>
-              </div>
-            </div>
-            <Button aria-label="Sign out" className="shrink-0 px-3 sm:px-4" disabled={isLoggingOut} onClick={handleLogout} type="button" variant="outline">
-              <FiLogOut aria-hidden="true" className="h-4 w-4" />
-              <span className="hidden lg:inline">{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {isMobileNavOpen && (
-        <>
-          <button aria-label="Close navigation backdrop" className="fixed inset-0 z-40 bg-on-surface/45 lg:hidden" onClick={() => setIsMobileNavOpen(false)} type="button" />
-          <aside
-            id="mobile-navigation"
-            aria-labelledby="mobile-navigation-title"
-            aria-modal="true"
-            className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col overflow-y-auto border-r border-outline-variant bg-surface-container-lowest shadow-xl lg:hidden"
-            role="dialog"
-          >
-            <div className="flex min-h-16 items-center justify-between border-b border-outline-variant px-4">
-              <p id="mobile-navigation-title" className="eyebrow text-primary">Application navigation</p>
-              <button
-                ref={mobileNavCloseRef}
-                aria-label="Close navigation menu"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2"
-                onClick={() => setIsMobileNavOpen(false)}
-                type="button"
-              >
-                <FiX aria-hidden="true" className="h-5 w-5" />
-              </button>
-            </div>
-            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
-              <p className="px-3 pb-2 eyebrow">Workspace</p>
-              <NavigationList onNavigate={() => setIsMobileNavOpen(false)} />
-            </nav>
-          </aside>
-        </>
-      )}
-
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <aside aria-label="Application navigation" className="hidden w-60 shrink-0 border-r border-outline-variant/80 bg-surface-container-lowest lg:block">
-          <div className="sticky top-16 flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto">
-            <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
-              <p className="px-3 pb-2 eyebrow">Workspace</p>
-              <NavigationList />
-            </nav>
-          </div>
+          <nav aria-label="Primary" className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 py-5">
+            <p className="px-3 pb-2 eyebrow">Workspace</p>
+            <NavigationList />
+          </nav>
         </aside>
 
-        <main id="main-content" className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-          <div className="mx-auto max-w-[1440px]">
-            <div className="mb-7 flex flex-col gap-4 border-b border-outline-variant/80 pb-7 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
-                  A clear starting point for every handoff.
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">
-                  The shell is in place. It will stay quiet until an approved screen contract provides real operational records.
-                </p>
+        <div className="min-w-0">
+          <header className={`${shellHeaderHeight} sticky top-0 z-30 border-b border-outline-variant/80 bg-surface-container-lowest`}>
+            <div className="flex h-full items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-8 lg:px-8">
+              <button
+                ref={menuButtonRef}
+                aria-controls="mobile-navigation"
+                aria-expanded={isMobileNavOpen}
+                aria-label="Open navigation menu"
+                className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-low text-on-surface transition-colors hover:bg-surface-container focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2 lg:hidden"
+                onClick={() => setIsMobileNavOpen(true)}
+                type="button"
+              >
+                <FiMenu aria-hidden="true" className="h-5 w-5" />
+              </button>
+
+              <a className="flex shrink-0 items-center gap-3 text-on-surface lg:hidden" href="#main-content" aria-label="OrderTrack overview">
+                <BrandMark />
+                <span className="font-display text-lg font-bold tracking-tight">OrderTrack</span>
+              </a>
+
+              <div className="hidden min-w-0 flex-1 sm:block">
+                <p className="eyebrow truncate">Order-to-cash workspace</p>
+                <p className="mt-1 truncate text-sm text-on-surface-variant">Client foundation / overview</p>
+              </div>
+
+              <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2 sm:gap-3 sm:px-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><FiUser aria-hidden="true" className="h-4 w-4" /></span>
+                  <div className="hidden min-w-0 max-w-[13rem] sm:block">
+                    <p className="truncate text-sm font-semibold text-on-surface">{user.name}</p>
+                    <p className="truncate font-mono text-[0.6875rem] tabular text-on-surface-variant">{user.role} · {user.email}</p>
+                  </div>
+                </div>
+                <Button aria-label="Sign out" className="shrink-0 px-3 sm:px-4" disabled={isLoggingOut} onClick={handleLogout} type="button" variant="outline">
+                  <FiLogOut aria-hidden="true" className="h-4 w-4" />
+                  <span className="hidden lg:inline">{isLoggingOut ? 'Signing out…' : 'Sign out'}</span>
+                </Button>
               </div>
             </div>
+          </header>
 
-            <div className="grid gap-6 xl:grid-cols-12">
-              <div className="min-w-0 xl:col-span-8"><PlaceholderPanel /></div>
-              <div className="min-w-0 xl:col-span-4"><SystemPanel /></div>
+          {isMobileNavOpen && (
+            <>
+              <button aria-label="Close navigation backdrop" className="fixed inset-0 z-40 bg-on-surface/45 lg:hidden" onClick={() => setIsMobileNavOpen(false)} type="button" />
+              <aside
+                id="mobile-navigation"
+                aria-labelledby="mobile-navigation-title"
+                aria-modal="true"
+                className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col overflow-y-auto border-r border-outline-variant bg-surface-container-lowest shadow-xl lg:hidden"
+                role="dialog"
+              >
+                <div className="flex min-h-16 items-center justify-between border-b border-outline-variant px-4">
+                  <p id="mobile-navigation-title" className="eyebrow text-primary">Application navigation</p>
+                  <button
+                    ref={mobileNavCloseRef}
+                    aria-label="Close navigation menu"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:outline-3 focus-visible:outline-primary focus-visible:outline-offset-2"
+                    onClick={() => setIsMobileNavOpen(false)}
+                    type="button"
+                  >
+                    <FiX aria-hidden="true" className="h-5 w-5" />
+                  </button>
+                </div>
+                <nav aria-label="Primary" className="flex flex-col gap-1 px-3 py-5">
+                  <p className="px-3 pb-2 eyebrow">Workspace</p>
+                  <NavigationList onNavigate={() => setIsMobileNavOpen(false)} />
+                </nav>
+              </aside>
+            </>
+          )}
+
+          <main id="main-content" className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+            <div className="mx-auto max-w-[1440px]">
+              <div className="mb-7 flex flex-col gap-4 border-b border-outline-variant/80 pb-7 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-on-surface sm:text-4xl">
+                    A clear starting point for every handoff.
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">
+                    The shell is in place. It will stay quiet until an approved screen contract provides real operational records.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 xl:grid-cols-12">
+                <div className="min-w-0 xl:col-span-8"><PlaceholderPanel /></div>
+                <div className="min-w-0 xl:col-span-4"><SystemPanel /></div>
+              </div>
+
+              <footer className="mt-8 flex flex-col gap-2 border-t border-outline-variant/80 pt-4 text-xs text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
+                <p>OrderTrack client scaffold</p>
+                <p className="font-mono tabular">NO LIVE DATA · UI FOUNDATION</p>
+              </footer>
             </div>
-
-            <footer className="mt-8 flex flex-col gap-2 border-t border-outline-variant/80 pt-4 text-xs text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
-              <p>OrderTrack client scaffold</p>
-              <p className="font-mono tabular">NO LIVE DATA · UI FOUNDATION</p>
-            </footer>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,10 @@ test('root shell keeps its accessible, empty-state foundation', () => {
 
   assert.match(layout, /<html lang="en">/);
   assert.match(page, /<aside aria-label="Application navigation"/);
+  assert.match(page, /const shellHeaderHeight = 'h-16 lg:h-20'/);
+  assert.match(page, /lg:grid-cols-\[15rem_minmax\(0,1fr\)\]/);
+  assert.match(page, /sticky top-0 hidden h-screen/);
+  assert.match(page, /className=\{`\$\{shellHeaderHeight\}/);
   assert.match(page, /aria-controls="mobile-navigation"/);
   assert.match(page, /aria-expanded=\{isMobileNavOpen\}/);
   assert.match(page, /aria-labelledby="mobile-navigation-title"/);
