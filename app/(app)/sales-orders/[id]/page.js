@@ -2,15 +2,21 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { FiArrowLeft } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiTruck } from 'react-icons/fi';
 import { ErrorState, LoadingState } from '../../../../components/data-state.js';
 import { PageHeader } from '../../../../components/page-header.js';
+import { useSession } from '../../../../components/session.js';
 import { StatusBadge } from '../../../../components/status-badge.js';
+import { Button } from '../../../../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../../../../components/ui/card.js';
 import { Table, TableScroll, Td, Th, Tr } from '../../../../components/ui/table.js';
 import { salesOrdersApi } from '../../../../lib/api-client.js';
 import { formatCurrency, formatDateTime, salesOrderStatus } from '../../../../lib/master-data.js';
+import { canCreateGoodsReceipt, canCreateVendorPo } from '../../../../lib/phase4-helpers.js';
 import { useApiData } from '../../../../lib/use-api-data.js';
+import { CreateGoodsReceiptDialog } from './create-goods-receipt-dialog.js';
+import { CreateVendorPoDialog } from './create-vendor-po-dialog.js';
 
 function InfoItem({ label, children }) {
   return (
@@ -31,10 +37,20 @@ function Quantity({ value, ordered }) {
   );
 }
 
+const TABS = [
+  { key: 'items', label: 'Item & progres', icon: FiBox },
+  { key: 'vendorPos', label: 'Vendor PO', icon: FiTruck },
+  { key: 'goodsReceipts', label: 'Penerimaan barang', icon: FiClipboard },
+];
+
 export default function SalesOrderDetailPage() {
   const { id } = useParams();
+  const user = useSession();
   const { data, loading, error, reload } = useApiData(() => salesOrdersApi.get(id), [id]);
   const order = data?.salesOrder;
+  const [activeTab, setActiveTab] = useState('items');
+  const [openVendorPo, setOpenVendorPo] = useState(false);
+  const [openGoodsReceipt, setOpenGoodsReceipt] = useState(false);
 
   if (loading && !order) {
     return (
@@ -55,11 +71,34 @@ export default function SalesOrderDetailPage() {
   }
 
   const badge = salesOrderStatus(order.status);
+  const canVpo = canCreateVendorPo(user.role);
+  const canGr = canCreateGoodsReceipt(user.role);
+
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {canVpo && (
+        <Button onClick={() => setOpenVendorPo(true)} size="sm" variant="outline">
+          <FiPlus aria-hidden="true" className="h-3.5 w-3.5" />
+          Vendor PO
+        </Button>
+      )}
+      {canGr && (
+        <Button onClick={() => setOpenGoodsReceipt(true)} size="sm" variant="outline">
+          <FiPlus aria-hidden="true" className="h-3.5 w-3.5" />
+          Penerimaan
+        </Button>
+      )}
+      <Link className="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface" href="/sales-orders">
+        <FiArrowLeft aria-hidden="true" className="h-4 w-4" />
+        Kembali
+      </Link>
+    </div>
+  );
 
   return (
     <>
       <PageHeader
-        actions={<Link className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface" href="/sales-orders"><FiArrowLeft aria-hidden="true" className="h-4 w-4" />Kembali</Link>}
+        actions={actions}
         description={order.customerName}
         eyebrow="Sales order"
         title={(
@@ -70,80 +109,183 @@ export default function SalesOrderDetailPage() {
         )}
       />
 
-      <div className="grid gap-6 xl:grid-cols-12">
-        <div className="min-w-0 space-y-6 xl:col-span-8">
-          <Card>
-            <CardHeader>
-              <p className="eyebrow text-primary">Item & progres</p>
-              <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Kuantitas per tahap</h2>
-            </CardHeader>
+      <div className="mb-6 border-b border-outline-variant">
+        <div className="flex flex-wrap gap-1">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                aria-current={active ? 'page' : undefined}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-t-lg border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${active ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+                onClick={() => setActiveTab(tab.key)}
+                type="button"
+              >
+                <Icon aria-hidden="true" className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeTab === 'items' && (
+        <div className="grid gap-6 xl:grid-cols-12">
+          <div className="min-w-0 space-y-6 xl:col-span-8">
+            <Card>
+              <CardHeader>
+                <p className="eyebrow text-primary">Item & progres</p>
+                <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Kuantitas per tahap</h2>
+              </CardHeader>
+              <TableScroll>
+                <Table className="min-w-[52rem]">
+                  <thead>
+                    <tr>
+                      <Th>SKU</Th>
+                      <Th>Nama item</Th>
+                      <Th className="text-right">Diterima</Th>
+                      <Th className="text-right">Dikirim</Th>
+                      <Th className="text-right">Ditagih</Th>
+                      <Th className="text-right">Harga satuan</Th>
+                      <Th className="text-right">Jumlah</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item, index) => (
+                      <Tr key={`${item.sku}-${index}`}>
+                        <Td className="whitespace-nowrap font-mono text-xs">{item.sku}</Td>
+                        <Td className="min-w-[12rem]">
+                          <p className="font-semibold text-on-surface">{item.name}</p>
+                          <p className="mt-0.5 text-xs text-on-surface-variant">Qty order: <span className="tabular font-semibold text-on-surface">{item.qtyOrdered}</span></p>
+                        </Td>
+                        <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyReceived} /></Td>
+                        <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyShipped} /></Td>
+                        <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyInvoiced} /></Td>
+                        <Td className="whitespace-nowrap text-right tabular">{formatCurrency(item.unitPrice)}</Td>
+                        <Td className="whitespace-nowrap text-right font-semibold tabular">{formatCurrency(Number(item.qtyOrdered) * Number(item.unitPrice))}</Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </TableScroll>
+              <div className="flex items-center justify-between gap-4 border-t border-outline-variant bg-surface-container-low px-5 py-4 sm:px-6">
+                <p className="text-sm text-on-surface-variant">Total ({order.items.length} item)</p>
+                <p className="font-display text-xl font-semibold tabular text-on-surface">{formatCurrency(order.totalAmount)}</p>
+              </div>
+            </Card>
+          </div>
+
+          <div className="min-w-0 xl:col-span-4">
+            <Card as="aside" aria-label="Informasi sales order" className="bg-surface-container-low">
+              <CardHeader>
+                <p className="eyebrow">Ringkasan</p>
+                <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Informasi dokumen</h2>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-4">
+                  <InfoItem label="Customer">{order.customerName}</InfoItem>
+                  <InfoItem label="PO customer">{order.customerPoNumber || '—'}</InfoItem>
+                  <InfoItem label="Quotation">
+                    <Link className="font-mono text-xs text-primary underline underline-offset-4" href={`/quotations/${order.quotationId}`}>
+                      {order.quotationNumber}
+                    </Link>
+                  </InfoItem>
+                  <InfoItem label="Sales">{order.salesName ?? '—'}</InfoItem>
+                  <InfoItem label="Dibuat">{formatDateTime(order.createdAt)}</InfoItem>
+                </dl>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'vendorPos' && (
+        <Card>
+          <CardHeader>
+            <p className="eyebrow text-primary">Vendor PO</p>
+            <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Daftar pemesanan ke vendor</h2>
+          </CardHeader>
+          {(order.vendorPos ?? []).length === 0 ? (
+            <div className="px-5 py-10 text-center sm:px-6">
+              <p className="text-sm font-semibold text-on-surface">Belum ada Vendor PO</p>
+              <p className="mt-1 text-sm text-on-surface-variant">Purchasing dapat membuat Vendor PO untuk SO ini.</p>
+            </div>
+          ) : (
             <TableScroll>
-              <Table className="min-w-[52rem]">
+              <Table className="min-w-[40rem]">
                 <thead>
                   <tr>
-                    <Th>SKU</Th>
-                    <Th>Nama item</Th>
-                    <Th className="text-right">Diterima</Th>
-                    <Th className="text-right">Dikirim</Th>
-                    <Th className="text-right">Ditagih</Th>
-                    <Th className="text-right">Harga satuan</Th>
-                    <Th className="text-right">Jumlah</Th>
+                    <Th>Nomor PO</Th>
+                    <Th>Vendor</Th>
+                    <Th>Status</Th>
+                    <Th>Tanggal</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {order.items.map((item, index) => (
-                    <Tr key={`${item.sku}-${index}`}>
-                      <Td className="whitespace-nowrap font-mono text-xs">{item.sku}</Td>
-                      <Td className="min-w-[12rem]">
-                        <p className="font-semibold text-on-surface">{item.name}</p>
-                        <p className="mt-0.5 text-xs text-on-surface-variant">Qty order: <span className="tabular font-semibold text-on-surface">{item.qtyOrdered}</span></p>
-                      </Td>
-                      <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyReceived} /></Td>
-                      <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyShipped} /></Td>
-                      <Td className="text-right"><Quantity ordered={item.qtyOrdered} value={item.qtyInvoiced} /></Td>
-                      <Td className="whitespace-nowrap text-right tabular">{formatCurrency(item.unitPrice)}</Td>
-                      <Td className="whitespace-nowrap text-right font-semibold tabular">{formatCurrency(Number(item.qtyOrdered) * Number(item.unitPrice))}</Td>
+                  {(order.vendorPos ?? []).map((vpo) => (
+                    <Tr key={vpo.id}>
+                      <Td className="whitespace-nowrap font-mono text-xs font-semibold">{vpo.poNumber}</Td>
+                      <Td className="min-w-[12rem]">{vpo.vendorName}</Td>
+                      <Td><StatusBadge label={salesOrderStatus(vpo.status).label} tone={salesOrderStatus(vpo.status).tone} /></Td>
+                      <Td className="whitespace-nowrap text-on-surface-variant">{formatDateTime(vpo.createdAt)}</Td>
                     </Tr>
                   ))}
                 </tbody>
               </Table>
             </TableScroll>
-            <div className="flex items-center justify-between gap-4 border-t border-outline-variant bg-surface-container-low px-5 py-4 sm:px-6">
-              <p className="text-sm text-on-surface-variant">Total ({order.items.length} item)</p>
-              <p className="font-display text-xl font-semibold tabular text-on-surface">{formatCurrency(order.totalAmount)}</p>
+          )}
+        </Card>
+      )}
+
+      {activeTab === 'goodsReceipts' && (
+        <Card>
+          <CardHeader>
+            <p className="eyebrow text-primary">Penerimaan barang</p>
+            <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Riwayat penerimaan</h2>
+          </CardHeader>
+          {(order.goodsReceipts ?? []).length === 0 ? (
+            <div className="px-5 py-10 text-center sm:px-6">
+              <p className="text-sm font-semibold text-on-surface">Belum ada penerimaan</p>
+              <p className="mt-1 text-sm text-on-surface-variant">GA dapat mencatat barang masuk setelah Purchasing membuat Vendor PO.</p>
             </div>
-          </Card>
+          ) : (
+            <TableScroll>
+              <Table className="min-w-[40rem]">
+                <thead>
+                  <tr>
+                    <Th>Nomor GR</Th>
+                    <Th>Vendor PO</Th>
+                    <Th>Diterima</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(order.goodsReceipts ?? []).map((gr) => (
+                    <Tr key={gr.id}>
+                      <Td className="whitespace-nowrap font-mono text-xs font-semibold">{gr.grNumber}</Td>
+                      <Td className="min-w-[12rem]">{gr.vendorPoNumber}</Td>
+                      <Td className="whitespace-nowrap text-on-surface-variant">{formatDateTime(gr.receivedAt)}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableScroll>
+          )}
+        </Card>
+      )}
 
-          <p className="text-xs leading-5 text-on-surface-variant">
-            Progres kuantitas diterima, dikirim, dan ditagih diperbarui oleh fase berikutnya. Fase 3 hanya menampilkan nilai awal dari server.
-          </p>
-        </div>
-
-        <div className="min-w-0 xl:col-span-4">
-          <Card as="aside" aria-label="Informasi sales order" className="bg-surface-container-low">
-            <CardHeader>
-              <p className="eyebrow">Ringkasan</p>
-              <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Informasi dokumen</h2>
-            </CardHeader>
-            <CardContent>
-              <dl className="space-y-4">
-                <InfoItem label="Customer">{order.customerName}</InfoItem>
-                <InfoItem label="PO customer">{order.customerPoNumber || '—'}</InfoItem>
-                <InfoItem label="Quotation">
-                  <Link className="font-mono text-xs text-primary underline underline-offset-4" href={`/quotations/${order.quotationId}`}>
-                    {order.quotationNumber}
-                  </Link>
-                </InfoItem>
-                <InfoItem label="Sales">{order.salesName ?? '—'}</InfoItem>
-                <InfoItem label="Dibuat">{formatDateTime(order.createdAt)}</InfoItem>
-              </dl>
-              <p className="mt-5 border-t border-outline-variant pt-4 text-xs leading-5 text-on-surface-variant">
-                Tidak ada pembuatan atau perubahan manual untuk sales order. Dokumen ini hanya lahir dari konversi quotation.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <CreateVendorPoDialog
+        onClose={() => setOpenVendorPo(false)}
+        onSuccess={reload}
+        open={openVendorPo}
+        salesOrder={order}
+      />
+      <CreateGoodsReceiptDialog
+        onClose={() => setOpenGoodsReceipt(false)}
+        onSuccess={reload}
+        open={openGoodsReceipt}
+        salesOrder={order}
+      />
     </>
   );
 }
