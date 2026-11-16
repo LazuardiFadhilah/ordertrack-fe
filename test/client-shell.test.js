@@ -14,34 +14,42 @@ test.afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-test('root shell keeps its accessible, empty-state foundation', () => {
-  const layout = readClientFile('app/layout.js');
-  const page = readClientFile('app/page.js');
+test('authenticated shell keeps its accessible foundation', () => {
+  const layout = readClientFile('app/(app)/layout.js');
+  const page = readClientFile('app/(app)/page.js');
+  const rootLayout = readClientFile('app/layout.js');
   const styles = readClientFile('app/globals.css');
 
-  assert.match(layout, /<html lang="en">/);
-  assert.match(page, /<aside aria-label="Application navigation"/);
-  assert.match(page, /const shellHeaderHeight = 'h-16 lg:h-20'/);
-  assert.match(page, /lg:grid-cols-\[15rem_minmax\(0,1fr\)\]/);
-  assert.match(page, /sticky top-0 hidden h-screen/);
-  assert.match(page, /className=\{`\$\{shellHeaderHeight\}/);
-  assert.match(page, /aria-controls="mobile-navigation"/);
-  assert.match(page, /aria-expanded=\{isMobileNavOpen\}/);
-  assert.match(page, /aria-labelledby="mobile-navigation-title"/);
-  assert.match(page, /key === 'Escape'/);
-  assert.match(page, /Close navigation backdrop/);
-  assert.match(page, /<main id="main-content"/);
-  assert.match(page, /Skip to main content/);
-  assert.match(page, /No operational data loaded/);
-  assert.match(page, /min-h-16/);
-  assert.match(page, /Workspace/);
-  assert.match(page, /border-l-2/);
-  assert.doesNotMatch(page, /Environment/);
-  assert.doesNotMatch(page, /ROUTE \/ OVERVIEW/);
-  assert.match(page, /components\/ui\/button/);
-  assert.match(page, /rounded-(md|lg)/);
-  assert.doesNotMatch(styles, /border-radius:\s*0/);
+  assert.match(rootLayout, /<html lang="en">/);
+  assert.match(layout, /<aside aria-label="Application navigation"/);
+  assert.match(layout, /const shellHeaderHeight = 'h-16 lg:h-20'/);
+  assert.match(layout, /lg:grid-cols-\[15rem_minmax\(0,1fr\)\]/);
+  assert.match(layout, /sticky top-0 hidden h-screen/);
+  assert.match(layout, /className=\{\`\$\{shellHeaderHeight\}/);
+  assert.match(layout, /aria-controls="mobile-navigation"/);
+  assert.match(layout, /aria-expanded=\{isMobileNavOpen\}/);
+  assert.match(layout, /aria-labelledby="mobile-navigation-title"/);
+  assert.match(layout, /key === 'Escape'/);
+  assert.match(layout, /Tutup latar navigasi/);
+  assert.match(layout, /<main id="main-content"/);
+  assert.match(layout, /Lewati ke konten utama/);
+  assert.match(layout, /min-h-16/);
+  assert.match(layout, /Workspace/);
+  assert.match(layout, /border-l-2/);
+  assert.match(layout, /<Toaster/);
+  assert.match(layout, /SessionContext\.Provider/);
+  assert.match(layout, /adminOnly: true/);
+  assert.match(layout, /href: '\/quotations'/);
+  assert.match(layout, /href: '\/sales-orders'/);
+  assert.match(layout, /href: '\/customers'/);
+  assert.match(layout, /href: '\/vendors'/);
+  assert.doesNotMatch(layout, /Environment/);
+  assert.doesNotMatch(layout, /ROUTE \/ OVERVIEW/);
+  assert.match(page, /Akses cepat/);
+  assert.match(page, /canWriteQuotation/);
+  assert.doesNotMatch(page, /No operational data loaded/);
   assert.match(styles, /:focus-visible\s*\{[\s\S]*outline: 3px solid/);
+  assert.doesNotMatch(styles, /border-radius:\s*0/);
 });
 
 test('login posts the exact auth payload with same-origin cookie credentials', async () => {

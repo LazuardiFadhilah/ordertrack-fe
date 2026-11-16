@@ -1,13 +1,9 @@
+import { readBody } from '../lib/api-client.js';
+
 const GENERIC_AUTH_ERROR = 'Unable to sign in. Check your email and password and try again.';
 
 async function readResponse(response) {
-  let body = null;
-
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
-  }
+  const body = await readBody(response);
 
   if (!response.ok || body?.success === false) {
     const error = new Error(response.status === 400 || response.status === 401 ? GENERIC_AUTH_ERROR : 'The authentication service is unavailable. Try again.');
