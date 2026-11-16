@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiTruck } from 'react-icons/fi';
+import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiSend, FiTruck } from 'react-icons/fi';
 import { ErrorState, LoadingState } from '../../../../components/data-state.js';
 import { PageHeader } from '../../../../components/page-header.js';
 import { useSession } from '../../../../components/session.js';
@@ -11,11 +11,12 @@ import { StatusBadge } from '../../../../components/status-badge.js';
 import { Button } from '../../../../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../../../../components/ui/card.js';
 import { Table, TableScroll, Td, Th, Tr } from '../../../../components/ui/table.js';
-import { salesOrdersApi } from '../../../../lib/api-client.js';
+import { salesOrdersApi, shippingApi } from '../../../../lib/api-client.js';
 import { formatCurrency, formatDateTime, salesOrderStatus } from '../../../../lib/master-data.js';
 import { canCreateGoodsReceipt, canCreateVendorPo } from '../../../../lib/phase4-helpers.js';
 import { useApiData } from '../../../../lib/use-api-data.js';
 import { CreateGoodsReceiptDialog } from './create-goods-receipt-dialog.js';
+import { CreateShippingRequestDialog } from './create-shipping-request-dialog.js';
 import { CreateVendorPoDialog } from './create-vendor-po-dialog.js';
 
 function InfoItem({ label, children }) {
@@ -41,6 +42,7 @@ const TABS = [
   { key: 'items', label: 'Item & progres', icon: FiBox },
   { key: 'vendorPos', label: 'Vendor PO', icon: FiTruck },
   { key: 'goodsReceipts', label: 'Penerimaan barang', icon: FiClipboard },
+  { key: 'shipping', label: 'Pengiriman', icon: FiSend },
 ];
 
 export default function SalesOrderDetailPage() {
@@ -51,6 +53,18 @@ export default function SalesOrderDetailPage() {
   const [activeTab, setActiveTab] = useState('items');
   const [openVendorPo, setOpenVendorPo] = useState(false);
   const [openGoodsReceipt, setOpenGoodsReceipt] = useState(false);
+  const [openShippingRequest, setOpenShippingRequest] = useState(false);
+
+  const { data: requestsData, loading: loadingRequests, error: errorRequests, reload: reloadRequests } = useApiData(
+    () => (activeTab === 'shipping' ? shippingApi.listRequests({ soId: id, limit: 100 }) : Promise.resolve(null)),
+    [activeTab, id],
+  );
+  const { data: deliveryData, loading: loadingDelivery, error: errorDelivery, reload: reloadDelivery } = useApiData(
+    () => (activeTab === 'shipping' ? shippingApi.listDeliveryOrders({ soId: id, limit: 100 }) : Promise.resolve(null)),
+    [activeTab, id],
+  );
+  const requests = requestsData?.items ?? [];
+  const deliveryOrders = deliveryData?.items ?? [];
 
   if (loading && !order) {
     return (
@@ -73,6 +87,7 @@ export default function SalesOrderDetailPage() {
   const badge = salesOrderStatus(order.status);
   const canVpo = canCreateVendorPo(user.role);
   const canGr = canCreateGoodsReceipt(user.role);
+  const canSr = user.role === 'SALES' || user.role === 'GA' || user.role === 'ADMIN';
 
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
@@ -86,6 +101,12 @@ export default function SalesOrderDetailPage() {
         <Button onClick={() => setOpenGoodsReceipt(true)} size="sm" variant="outline">
           <FiPlus aria-hidden="true" className="h-3.5 w-3.5" />
           Penerimaan
+        </Button>
+      )}
+      {canSr && (
+        <Button onClick={() => setOpenShippingRequest(true)} size="sm" variant="outline">
+          <FiPlus aria-hidden="true" className="h-3.5 w-3.5" />
+          Permintaan Kirim
         </Button>
       )}
       <Link className="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface" href="/sales-orders">
@@ -274,6 +295,81 @@ export default function SalesOrderDetailPage() {
         </Card>
       )}
 
+      {activeTab === 'shipping' && (
+        <Card>
+          <CardHeader>
+            <p className="eyebrow text-primary">Pengiriman</p>
+            <h2 className="mt-1 font-display text-lg font-semibold text-on-surface">Riwayat pengiriman</h2>
+          </CardHeader>
+          {loadingRequests || loadingDelivery ? (
+            <LoadingState label="Memuat data pengiriman…" />
+          ) : errorRequests || errorDelivery ? (
+            <ErrorState message={(errorRequests ?? errorDelivery).message} onRetry={() => { reloadRequests(); reloadDelivery(); }} />
+          ) : (
+            <div className="space-y-6 px-5 py-2 sm:px-6">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-on-surface">Permintaan kirim</h3>
+                {requests.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">Belum ada permintaan kirim.</p>
+                ) : (
+                  <TableScroll>
+                    <Table className="min-w-[36rem]">
+                      <thead>
+                        <tr>
+                          <Th>Nomor SR</Th>
+                          <Th>Status</Th>
+                          <Th>Item</Th>
+                          <Th>Dibuat</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {requests.map((sr) => (
+                          <Tr key={sr.id}>
+                            <Td className="whitespace-nowrap font-mono text-xs font-semibold">{sr.srNumber}</Td>
+                            <Td><StatusBadge label={salesOrderStatus(sr.status).label} tone={salesOrderStatus(sr.status).tone} /></Td>
+                            <Td className="text-sm">{sr.items.map((it) => `${it.sku} (${it.qty})`).join(', ')}</Td>
+                            <Td className="whitespace-nowrap text-on-surface-variant">{formatDateTime(sr.createdAt)}</Td>
+                          </Tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </TableScroll>
+                )}
+              </div>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-on-surface">Surat jalan</h3>
+                {deliveryOrders.length === 0 ? (
+                  <p className="text-sm text-on-surface-variant">Belum ada surat jalan.</p>
+                ) : (
+                  <TableScroll>
+                    <Table className="min-w-[36rem]">
+                      <thead>
+                        <tr>
+                          <Th>Nomor DO</Th>
+                          <Th>Status</Th>
+                          <Th>Item</Th>
+                          <Th>Dibuat</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deliveryOrders.map((doItem) => (
+                          <Tr key={doItem.id}>
+                            <Td className="whitespace-nowrap font-mono text-xs font-semibold">{doItem.doNumber}</Td>
+                            <Td><StatusBadge label={salesOrderStatus(doItem.status).label} tone={salesOrderStatus(doItem.status).tone} /></Td>
+                            <Td className="text-sm">{doItem.items.map((it) => `${it.sku} (${it.qty})`).join(', ')}</Td>
+                            <Td className="whitespace-nowrap text-on-surface-variant">{formatDateTime(doItem.createdAt)}</Td>
+                          </Tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </TableScroll>
+                )}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       <CreateVendorPoDialog
         onClose={() => setOpenVendorPo(false)}
         onSuccess={reload}
@@ -284,6 +380,12 @@ export default function SalesOrderDetailPage() {
         onClose={() => setOpenGoodsReceipt(false)}
         onSuccess={reload}
         open={openGoodsReceipt}
+        salesOrder={order}
+      />
+      <CreateShippingRequestDialog
+        onClose={() => setOpenShippingRequest(false)}
+        onSuccess={() => { reload(); reloadRequests(); }}
+        open={openShippingRequest}
         salesOrder={order}
       />
     </>
