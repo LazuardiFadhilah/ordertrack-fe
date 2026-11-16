@@ -14,6 +14,7 @@ const navigation = [
   { href: '/', label: 'Ringkasan', icon: FiGrid },
   { href: '/quotations', label: 'Quotation', icon: FiFileText },
   { href: '/sales-orders', label: 'Sales order', icon: FiClipboard },
+  { href: '/shipping', label: 'Pengiriman', icon: FiTruck },
   { href: '/customers', label: 'Customer', icon: FiUsers, adminOnly: true },
   { href: '/vendors', label: 'Vendor', icon: FiTruck, adminOnly: true },
 ];
