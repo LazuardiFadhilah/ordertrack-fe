@@ -11,7 +11,7 @@ import { StatusBadge } from '../../../../components/status-badge.js';
 import { Button } from '../../../../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../../../../components/ui/card.js';
 import { Table, TableScroll, Td, Th, Tr } from '../../../../components/ui/table.js';
-import { invoiceApi, salesOrdersApi, shippingApi, vendorPaymentsApi } from '../../../../lib/api-client.js';
+import { documentsApi, documentUpload, invoiceApi, salesOrdersApi, shippingApi, vendorPaymentsApi } from '../../../../lib/api-client.js';
 import { PaymentDialog } from './payment-dialog.js';
 import { VendorPaymentDialog } from './vendor-payment-dialog.js';
 import { formatCurrency, formatDateTime, salesOrderStatus } from '../../../../lib/master-data.js';
@@ -20,6 +20,7 @@ import { useApiData } from '../../../../lib/use-api-data.js';
 import { CreateGoodsReceiptDialog } from './create-goods-receipt-dialog.js';
 import { CreateShippingRequestDialog } from './create-shipping-request-dialog.js';
 import { CreateVendorPoDialog } from './create-vendor-po-dialog.js';
+import { DocumentsPanel } from './documents-panel.js';
 
 function InfoItem({ label, children }) {
   return (
@@ -47,6 +48,7 @@ const TABS = [
   { key: 'shipping', label: 'Pengiriman', icon: FiSend },
   { key: 'invoices', label: 'Invoice & pembayaran', icon: FiFileText },
   { key: 'vendorPayments', label: 'Pembayaran vendor', icon: FiDollarSign },
+  { key: 'documents', label: 'Dokumen', icon: FiFileText },
 ];
 
 export default function SalesOrderDetailPage() {
@@ -431,6 +433,8 @@ export default function SalesOrderDetailPage() {
           )}
         </Card>
       )}
+
+      {activeTab === 'documents' && <DocumentsPanel canUpload={['SALES', 'GA', 'AR', 'ADMIN'].includes(user.role)} soId={id} />}
 
       {activeTab === 'vendorPayments' && (
         <Card>

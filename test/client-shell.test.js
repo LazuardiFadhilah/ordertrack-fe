@@ -45,8 +45,13 @@ test('authenticated shell keeps its accessible foundation', () => {
   assert.match(layout, /href: '\/vendors'/);
   assert.doesNotMatch(layout, /Environment/);
   assert.doesNotMatch(layout, /ROUTE \/ OVERVIEW/);
-  assert.match(page, /Akses cepat/);
-  assert.match(page, /canWriteQuotation/);
+  assert.match(page, /Dashboard/);
+  assert.match(page, /SALES/);
+  assert.match(page, /GA/);
+  assert.match(page, /AR/);
+  assert.match(page, /AP/);
+  assert.match(page, /ADMIN/);
+  assert.match(page, /roleQueues/);
   assert.doesNotMatch(page, /No operational data loaded/);
   assert.match(styles, /:focus-visible\s*\{[\s\S]*outline: 3px solid/);
   assert.doesNotMatch(styles, /border-radius:\s*0/);
