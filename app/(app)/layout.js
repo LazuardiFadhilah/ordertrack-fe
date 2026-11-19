@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button.js';
 import { SessionContext } from '../../components/session.js';
 import { canManageMasterData } from '../../lib/master-data.js';
 import { getCurrentUser, logout } from '../auth-client.js';
+import { NotificationBell } from './notifications.jsx';
 
 const navigation = [
   { href: '/', label: 'Ringkasan', icon: FiGrid },
@@ -170,6 +171,7 @@ export default function AppLayout({ children }) {
                 </div>
 
                 <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                  <NotificationBell />
                   <div className="flex min-w-0 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-2.5 py-2 sm:gap-3 sm:px-3">
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><FiUser aria-hidden="true" className="h-4 w-4" /></span>
                     <div className="hidden min-w-0 max-w-[13rem] sm:block">

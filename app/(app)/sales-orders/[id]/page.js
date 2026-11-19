@@ -21,6 +21,7 @@ import { CreateGoodsReceiptDialog } from './create-goods-receipt-dialog.js';
 import { CreateShippingRequestDialog } from './create-shipping-request-dialog.js';
 import { CreateVendorPoDialog } from './create-vendor-po-dialog.js';
 import { DocumentsPanel } from './documents-panel.js';
+import { SalesOrderTimeline } from './timeline.jsx';
 
 function InfoItem({ label, children }) {
   return (
@@ -433,6 +434,8 @@ export default function SalesOrderDetailPage() {
           )}
         </Card>
       )}
+
+      {activeTab === 'items' && <SalesOrderTimeline soId={id} />}
 
       {activeTab === 'documents' && <DocumentsPanel canUpload={['SALES', 'GA', 'AR', 'ADMIN'].includes(user.role)} soId={id} />}
 

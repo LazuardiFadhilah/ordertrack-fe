@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ApiError, customersApi, documentsApi, documentUpload, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi, vendorPaymentsApi } from '../lib/api-client.js';
+import { ApiError, customersApi, documentsApi, documentUpload, invoiceApi, notificationsApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi, vendorPaymentsApi } from '../lib/api-client.js';
 
 const originalFetch = globalThis.fetch;
 
@@ -151,6 +151,24 @@ test('document helpers use the explicit metadata, upload-token, and signed uploa
   assert.equal(calls[3].url, 'https://storage.test/upload');
   assert.equal(calls[3].method, 'PUT');
   assert.equal(calls[3].body, 4);
+});
+
+test('notification API calls list, timeline, detail, and mark-read routes', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, method: options.method });
+    return respond({ success: true, data: {} });
+  };
+  await notificationsApi.list({ unread: true });
+  await notificationsApi.timeline('so 1');
+  await notificationsApi.get('n 1');
+  await notificationsApi.markRead('n 1');
+  assert.deepEqual(calls, [
+    { url: '/api/notifications?unread=true', method: 'GET' },
+    { url: '/api/notifications/timeline/so%201', method: 'GET' },
+    { url: '/api/notifications/n%201', method: 'GET' },
+    { url: '/api/notifications/n%201/read', method: 'PATCH' },
+  ]);
 });
 
 test('vendor payment API calls /api/vendor-payments endpoint', async () => {
