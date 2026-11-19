@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ApiError, customersApi, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi, vendorPaymentsApi } from '../lib/api-client.js';
+import { ApiError, customersApi, documentsApi, documentUpload, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi, vendorPaymentsApi } from '../lib/api-client.js';
 
 const originalFetch = globalThis.fetch;
 
@@ -129,6 +129,28 @@ test('resource helpers call the contracted phase 3 paths', async () => {
     { url: '/api/quotations/q1/convert', method: 'POST', body: { customerPoNumber: 'PO/1' } },
     { url: '/api/sales-orders/so1', method: 'GET', body: undefined },
   ]);
+});
+
+test('document helpers use the explicit metadata, upload-token, and signed upload contract', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body instanceof Blob ? options.body.size : options.body ? JSON.parse(options.body) : undefined });
+    if (url === '/api/documents/upload-token') return respond({ success: true, data: { uploadUrl: 'https://storage.test/upload', fileUrl: 'https://storage.test/file' } });
+    if (url === 'https://storage.test/upload') return new Response(null, { status: 200 });
+    return respond({ success: true, data: { items: [] } });
+  };
+  await documentsApi.list({ soId: 'so1' });
+  await documentsApi.uploadToken({ soId: 'so1', fileName: 'po.pdf', mimeType: 'application/pdf', size: 4 });
+  await documentsApi.create({ soId: 'so1', refType: 'PO_CUSTOMER', fileName: 'po.pdf', mimeType: 'application/pdf', size: 4, fileUrl: 'https://storage.test/file' });
+  await documentUpload({ uploadUrl: 'https://storage.test/upload' }, new Blob(['data'], { type: 'application/pdf' }));
+  assert.deepEqual(calls.slice(0, 3), [
+    { url: '/api/documents?soId=so1', method: 'GET', body: undefined },
+    { url: '/api/documents/upload-token', method: 'POST', body: { soId: 'so1', fileName: 'po.pdf', mimeType: 'application/pdf', size: 4 } },
+    { url: '/api/documents', method: 'POST', body: { soId: 'so1', refType: 'PO_CUSTOMER', fileName: 'po.pdf', mimeType: 'application/pdf', size: 4, fileUrl: 'https://storage.test/file' } },
+  ]);
+  assert.equal(calls[3].url, 'https://storage.test/upload');
+  assert.equal(calls[3].method, 'PUT');
+  assert.equal(calls[3].body, 4);
 });
 
 test('vendor payment API calls /api/vendor-payments endpoint', async () => {
