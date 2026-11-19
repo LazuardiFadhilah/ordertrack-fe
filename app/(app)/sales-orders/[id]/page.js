@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
+import { FiArrowLeft, FiBox, FiClipboard, FiDollarSign, FiPlus, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 import { ErrorState, LoadingState } from '../../../../components/data-state.js';
 import { PageHeader } from '../../../../components/page-header.js';
 import { useSession } from '../../../../components/session.js';
@@ -11,8 +11,9 @@ import { StatusBadge } from '../../../../components/status-badge.js';
 import { Button } from '../../../../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../../../../components/ui/card.js';
 import { Table, TableScroll, Td, Th, Tr } from '../../../../components/ui/table.js';
-import { invoiceApi, salesOrdersApi, shippingApi } from '../../../../lib/api-client.js';
+import { invoiceApi, salesOrdersApi, shippingApi, vendorPaymentsApi } from '../../../../lib/api-client.js';
 import { PaymentDialog } from './payment-dialog.js';
+import { VendorPaymentDialog } from './vendor-payment-dialog.js';
 import { formatCurrency, formatDateTime, salesOrderStatus } from '../../../../lib/master-data.js';
 import { canCreateGoodsReceipt, canCreateVendorPo } from '../../../../lib/phase4-helpers.js';
 import { useApiData } from '../../../../lib/use-api-data.js';
@@ -45,6 +46,7 @@ const TABS = [
   { key: 'goodsReceipts', label: 'Penerimaan barang', icon: FiClipboard },
   { key: 'shipping', label: 'Pengiriman', icon: FiSend },
   { key: 'invoices', label: 'Invoice & pembayaran', icon: FiFileText },
+  { key: 'vendorPayments', label: 'Pembayaran vendor', icon: FiDollarSign },
 ];
 
 export default function SalesOrderDetailPage() {
@@ -57,6 +59,7 @@ export default function SalesOrderDetailPage() {
   const [openGoodsReceipt, setOpenGoodsReceipt] = useState(false);
   const [openShippingRequest, setOpenShippingRequest] = useState(false);
   const [openPayment, setOpenPayment] = useState(false);
+  const [openVendorPayment, setOpenVendorPayment] = useState(false);
   const [invoiceError, setInvoiceError] = useState('');
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const { data: invoiceData, loading: loadingInvoice, error: errorInvoice, reload: reloadInvoice } = useApiData(
@@ -79,6 +82,11 @@ export default function SalesOrderDetailPage() {
   );
   const requests = requestsData?.items ?? [];
   const deliveryOrders = deliveryData?.items ?? [];
+  const { data: vendorPaymentData, loading: loadingVendorPayments, error: errorVendorPayments, reload: reloadVendorPayments } = useApiData(
+    () => (activeTab === 'vendorPayments' ? vendorPaymentsApi.list({ soId: id, limit: 100 }) : Promise.resolve(null)),
+    [activeTab, id],
+  );
+  const vendorPayments = vendorPaymentData?.payments ?? [];
 
   if (loading && !order) {
     return (
@@ -424,6 +432,22 @@ export default function SalesOrderDetailPage() {
         </Card>
       )}
 
+      {activeTab === 'vendorPayments' && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div><p className="eyebrow text-primary">Hutang usaha</p><h2 className="mt-1 font-display text-lg font-semibold">Pembayaran vendor</h2></div>
+              <Button onClick={() => setOpenVendorPayment(true)}>Catat pembayaran</Button>
+            </div>
+          </CardHeader>
+          {loadingVendorPayments ? <LoadingState label="Memuat pembayaran…" /> : errorVendorPayments ? <ErrorState message={errorVendorPayments.message} onRetry={reloadVendorPayments} /> : vendorPayments.length === 0 ? (
+            <div className="px-5 py-10 text-center sm:px-6"><p className="text-sm font-semibold">Belum ada pembayaran vendor</p><p className="mt-1 text-sm text-on-surface-variant">Pembayaran vendor akan muncul setelah dicatat.</p></div>
+          ) : (
+            <TableScroll><Table className="min-w-[50rem]"><thead><tr><Th>Nomor pembayaran</Th><Th>Vendor PO</Th><Th>Vendor</Th><Th>Tanggal</Th><Th>Metode</Th><Th className="text-right">Nominal</Th></tr></thead><tbody>{vendorPayments.map((payment) => <Tr key={payment._id}><Td className="font-mono text-xs font-semibold">{payment.paymentNumber}</Td><Td className="font-mono text-xs">{payment.vendorPoNumber}</Td><Td>{payment.vendorName}</Td><Td className="whitespace-nowrap">{formatDateTime(payment.paidAt)}</Td><Td>{payment.paymentMethod}</Td><Td className="text-right font-semibold tabular">{formatCurrency(payment.amount)}</Td></Tr>)}</tbody></Table></TableScroll>
+          )}
+        </Card>
+      )}
+
       <CreateVendorPoDialog
         onClose={() => setOpenVendorPo(false)}
         onSuccess={reload}
@@ -443,6 +467,7 @@ export default function SalesOrderDetailPage() {
         salesOrder={order}
       />
       {invoice && <PaymentDialog invoice={invoice} onClose={() => setOpenPayment(false)} onSuccess={() => { reloadInvoice(); reloadPayments(); reload(); }} open={openPayment} />}
+      <VendorPaymentDialog salesOrder={order} onClose={() => setOpenVendorPayment(false)} onSuccess={() => { reloadVendorPayments(); reload(); }} open={openVendorPayment} />
     </>
   );
 }

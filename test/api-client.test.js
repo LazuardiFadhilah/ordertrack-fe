@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ApiError, customersApi, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi } from '../lib/api-client.js';
+import { ApiError, customersApi, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi, vendorPaymentsApi } from '../lib/api-client.js';
 
 const originalFetch = globalThis.fetch;
 
@@ -128,5 +128,21 @@ test('resource helpers call the contracted phase 3 paths', async () => {
     { url: '/api/quotations/q1/lose', method: 'POST', body: undefined },
     { url: '/api/quotations/q1/convert', method: 'POST', body: { customerPoNumber: 'PO/1' } },
     { url: '/api/sales-orders/so1', method: 'GET', body: undefined },
+  ]);
+});
+
+test('vendor payment API calls /api/vendor-payments endpoint', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : undefined });
+    return respond({ success: true, data: {} });
+  };
+
+  await vendorPaymentsApi.list({ soId: 'so1' });
+  await vendorPaymentsApi.create({ vendorPoId: 'vpo1', amount: 50000, paymentMethod: 'BANK_TRANSFER', paidAt: '2026-11-15T12:00:00+07:00' });
+
+  assert.deepEqual(calls, [
+    { url: '/api/vendor-payments?soId=so1', method: 'GET', body: undefined },
+    { url: '/api/vendor-payments', method: 'POST', body: { vendorPoId: 'vpo1', amount: 50000, paymentMethod: 'BANK_TRANSFER', paidAt: '2026-11-15T12:00:00+07:00' } },
   ]);
 });
