@@ -37,9 +37,9 @@ export default function InvoicesPage() {
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2"><FiFileText aria-hidden="true" className="h-4 w-4 text-primary" /><h2 className="font-display text-lg font-semibold">Daftar invoice</h2></div>
-            <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_11rem]">
-              <label className="relative"><span className="sr-only">Cari invoice</span><FiSearch aria-hidden="true" className="absolute left-3 top-3 h-4 w-4 text-on-surface-variant" /><Input aria-label="Cari invoice" className="pl-9" onChange={(event) => setSearch(event.target.value)} placeholder="Cari nomor / customer" value={search} /></label>
-              <Select aria-label="Filter status" onChange={(event) => setStatus(event.target.value)} value={status}><option value="">Semua status</option><option value="ISSUED">Terbit</option><option value="PARTIALLY_PAID">Dibayar sebagian</option><option value="PAID">Lunas</option><option value="VOID">Void</option></Select>
+            <div className="grid w-full min-w-0 gap-2 sm:w-[min(100%,28rem)] sm:grid-cols-[minmax(0,1fr)_11rem]">
+              <label className="relative min-w-0"><span className="sr-only">Cari invoice</span><FiSearch aria-hidden="true" className="absolute left-3 top-3 h-4 w-4 text-on-surface-variant" /><Input aria-label="Cari invoice" className="w-full pl-9" onChange={(event) => setSearch(event.target.value)} placeholder="Cari nomor / customer" value={search} /></label>
+              <Select aria-label="Filter status" className="min-w-0" onChange={(event) => setStatus(event.target.value)} value={status}><option value="">Semua status</option><option value="ISSUED">Terbit</option><option value="PARTIALLY_PAID">Dibayar sebagian</option><option value="PAID">Lunas</option><option value="VOID">Void</option></Select>
             </div>
           </div>
         </CardHeader>
