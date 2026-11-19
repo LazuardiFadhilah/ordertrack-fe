@@ -15,6 +15,7 @@ const navigation = [
   { href: '/quotations', label: 'Quotation', icon: FiFileText },
   { href: '/sales-orders', label: 'Sales order', icon: FiClipboard },
   { href: '/shipping', label: 'Pengiriman', icon: FiTruck },
+  { href: '/invoices', label: 'Penagihan', icon: FiFileText },
   { href: '/customers', label: 'Customer', icon: FiUsers, adminOnly: true },
   { href: '/vendors', label: 'Vendor', icon: FiTruck, adminOnly: true },
 ];

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiSend, FiTruck } from 'react-icons/fi';
+import { FiArrowLeft, FiBox, FiClipboard, FiPlus, FiSend, FiTruck, FiFileText } from 'react-icons/fi';
 import { ErrorState, LoadingState } from '../../../../components/data-state.js';
 import { PageHeader } from '../../../../components/page-header.js';
 import { useSession } from '../../../../components/session.js';
@@ -11,7 +11,8 @@ import { StatusBadge } from '../../../../components/status-badge.js';
 import { Button } from '../../../../components/ui/button.js';
 import { Card, CardContent, CardHeader } from '../../../../components/ui/card.js';
 import { Table, TableScroll, Td, Th, Tr } from '../../../../components/ui/table.js';
-import { salesOrdersApi, shippingApi } from '../../../../lib/api-client.js';
+import { invoiceApi, salesOrdersApi, shippingApi } from '../../../../lib/api-client.js';
+import { PaymentDialog } from './payment-dialog.js';
 import { formatCurrency, formatDateTime, salesOrderStatus } from '../../../../lib/master-data.js';
 import { canCreateGoodsReceipt, canCreateVendorPo } from '../../../../lib/phase4-helpers.js';
 import { useApiData } from '../../../../lib/use-api-data.js';
@@ -43,6 +44,7 @@ const TABS = [
   { key: 'vendorPos', label: 'Vendor PO', icon: FiTruck },
   { key: 'goodsReceipts', label: 'Penerimaan barang', icon: FiClipboard },
   { key: 'shipping', label: 'Pengiriman', icon: FiSend },
+  { key: 'invoices', label: 'Invoice & pembayaran', icon: FiFileText },
 ];
 
 export default function SalesOrderDetailPage() {
@@ -54,6 +56,18 @@ export default function SalesOrderDetailPage() {
   const [openVendorPo, setOpenVendorPo] = useState(false);
   const [openGoodsReceipt, setOpenGoodsReceipt] = useState(false);
   const [openShippingRequest, setOpenShippingRequest] = useState(false);
+  const [openPayment, setOpenPayment] = useState(false);
+  const [invoiceError, setInvoiceError] = useState('');
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const { data: invoiceData, loading: loadingInvoice, error: errorInvoice, reload: reloadInvoice } = useApiData(
+    () => (activeTab === 'invoices' ? invoiceApi.list({ limit: 100 }) : Promise.resolve(null)),
+    [activeTab],
+  );
+  const invoice = (invoiceData?.invoices ?? []).find((item) => String(item.soId) === String(id) && item.status !== 'VOID');
+  const { data: invoiceDetail, loading: loadingPayments, error: errorPayments, reload: reloadPayments } = useApiData(
+    () => (activeTab === 'invoices' && invoice ? invoiceApi.get(invoice._id) : Promise.resolve(null)),
+    [activeTab, invoice?._id],
+  );
 
   const { data: requestsData, loading: loadingRequests, error: errorRequests, reload: reloadRequests } = useApiData(
     () => (activeTab === 'shipping' ? shippingApi.listRequests({ soId: id, limit: 100 }) : Promise.resolve(null)),
@@ -88,6 +102,18 @@ export default function SalesOrderDetailPage() {
   const canVpo = canCreateVendorPo(user.role);
   const canGr = canCreateGoodsReceipt(user.role);
   const canSr = user.role === 'SALES' || user.role === 'GA' || user.role === 'ADMIN';
+  const canInvoice = ['AR', 'ADMIN'].includes(user.role);
+
+  async function handleCreateInvoice() {
+    setCreatingInvoice(true);
+    setInvoiceError('');
+    try {
+      await invoiceApi.create({ soId: id, dueDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) });
+      reloadInvoice();
+      reload();
+    } catch (err) { setInvoiceError(err.message); }
+    finally { setCreatingInvoice(false); }
+  }
 
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
@@ -109,6 +135,7 @@ export default function SalesOrderDetailPage() {
           Permintaan Kirim
         </Button>
       )}
+      <Button onClick={() => setActiveTab('invoices')} size="sm" variant="outline"><FiFileText aria-hidden="true" className="h-3.5 w-3.5" />Invoice & AR</Button>
       <Link className="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface" href="/sales-orders">
         <FiArrowLeft aria-hidden="true" className="h-4 w-4" />
         Kembali
@@ -295,6 +322,33 @@ export default function SalesOrderDetailPage() {
         </Card>
       )}
 
+      {activeTab === 'invoices' && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div><p className="eyebrow text-primary">Piutang usaha</p><h2 className="mt-1 font-display text-lg font-semibold">Invoice & pembayaran</h2></div>
+              <div className="flex flex-wrap gap-2">
+                {canInvoice && !invoice && ['SHIPPED', 'DO_RETURNED', 'COMPLETED'].includes(order.status) && <Button disabled={creatingInvoice} onClick={handleCreateInvoice}>{creatingInvoice ? 'Membuat…' : 'Buat invoice'}</Button>}
+                {canInvoice && invoice && ['ISSUED', 'PARTIALLY_PAID'].includes(invoice.status) && <Button onClick={() => setOpenPayment(true)}>Catat pembayaran</Button>}
+              </div>
+            </div>
+          </CardHeader>
+          {invoiceError && <p className="mx-6 mb-4 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger" role="alert">{invoiceError}</p>}
+          {loadingInvoice ? <LoadingState label="Memuat invoice…" /> : errorInvoice ? <ErrorState message={errorInvoice.message} onRetry={reloadInvoice} /> : invoice ? (
+            <div className="space-y-5 px-5 pb-6 sm:px-6">
+              <dl className="grid gap-4 border-y border-outline-variant py-4 sm:grid-cols-2 lg:grid-cols-4">
+                <InfoItem label="Nomor invoice"><span className="font-mono">{invoice.invoiceNumber}</span></InfoItem>
+                <InfoItem label="Status"><StatusBadge label={invoice.status} tone={invoice.status === 'PAID' ? 'done' : invoice.status === 'PARTIALLY_PAID' ? 'waiting' : 'progress'} /></InfoItem>
+                <InfoItem label="Total invoice">{formatCurrency(invoice.totalAmount)}</InfoItem>
+                <InfoItem label="Sisa piutang">{formatCurrency(Math.max(0, invoice.totalAmount - invoice.paidAmount))}</InfoItem>
+              </dl>
+              <TableScroll><Table className="min-w-[38rem]"><thead><tr><Th>Produk</Th><Th className="text-right">Qty</Th><Th className="text-right">Harga</Th><Th className="text-right">Jumlah</Th></tr></thead><tbody>{invoice.items.map((item, index) => <Tr key={`${item.sku}-${index}`}><Td><span className="font-mono text-xs">{item.sku}</span><span className="ml-2 font-medium">{item.name}</span></Td><Td className="text-right tabular">{item.qty}</Td><Td className="text-right tabular">{formatCurrency(item.unitPrice)}</Td><Td className="text-right font-semibold tabular">{formatCurrency(item.totalPrice)}</Td></Tr>)}</tbody></Table></TableScroll>
+              <div><h3 className="mb-2 text-sm font-semibold text-on-surface">Riwayat pembayaran</h3>{loadingPayments ? <LoadingState label="Memuat pembayaran…" /> : errorPayments ? <ErrorState message={errorPayments.message} onRetry={reloadPayments} /> : (invoiceDetail?.payments ?? []).length ? <TableScroll><Table className="min-w-[34rem]"><thead><tr><Th>Nomor pembayaran</Th><Th>Tanggal</Th><Th>Metode</Th><Th className="text-right">Nominal</Th></tr></thead><tbody>{invoiceDetail.payments.map((payment) => <Tr key={payment._id}><Td className="font-mono text-xs">{payment.paymentNumber}</Td><Td>{formatDateTime(payment.paidAt)}</Td><Td>{payment.paymentMethod}</Td><Td className="text-right font-semibold tabular">{formatCurrency(payment.amount)}</Td></Tr>)}</tbody></Table></TableScroll> : <p className="text-sm text-on-surface-variant">Belum ada pembayaran.</p>}</div>
+            </div>
+          ) : <div className="px-5 py-10 text-center sm:px-6"><p className="text-sm font-semibold">Belum ada invoice untuk SO ini</p><p className="mt-1 text-sm text-on-surface-variant">Invoice dapat dibuat setelah pengiriman selesai.</p></div>}
+        </Card>
+      )}
+
       {activeTab === 'shipping' && (
         <Card>
           <CardHeader>
@@ -388,6 +442,7 @@ export default function SalesOrderDetailPage() {
         open={openShippingRequest}
         salesOrder={order}
       />
+      {invoice && <PaymentDialog invoice={invoice} onClose={() => setOpenPayment(false)} onSuccess={() => { reloadInvoice(); reloadPayments(); reload(); }} open={openPayment} />}
     </>
   );
 }

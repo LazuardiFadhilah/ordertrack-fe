@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ApiError, customersApi, quotationsApi, request, salesOrdersApi, vendorsApi } from '../lib/api-client.js';
+import { ApiError, customersApi, invoiceApi, paymentApi, quotationsApi, request, salesOrdersApi, vendorsApi } from '../lib/api-client.js';
 
 const originalFetch = globalThis.fetch;
 
@@ -85,6 +85,24 @@ test('network failures surface an ApiError with status 0', async () => {
     assert.match(error.message, /Tidak dapat menghubungi server/);
     return true;
   });
+});
+
+test('invoice and payment helpers use backend invoice routes and request bodies', async () => {
+  const calls = [];
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : undefined });
+    return respond({ success: true, data: {} });
+  };
+  await invoiceApi.list({ status: 'ISSUED' });
+  await invoiceApi.get('inv 1');
+  await invoiceApi.create({ soId: 'so1', dueDate: '2027-01-01' });
+  await paymentApi.create({ invoiceId: 'inv1', amount: 25 });
+  assert.deepEqual(calls, [
+    { url: '/api/invoices?status=ISSUED', method: 'GET', body: undefined },
+    { url: '/api/invoices/inv%201', method: 'GET', body: undefined },
+    { url: '/api/invoices', method: 'POST', body: { soId: 'so1', dueDate: '2027-01-01' } },
+    { url: '/api/invoices/payments', method: 'POST', body: { invoiceId: 'inv1', amount: 25 } },
+  ]);
 });
 
 test('resource helpers call the contracted phase 3 paths', async () => {

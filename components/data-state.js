@@ -52,7 +52,7 @@ export function Field({ label, htmlFor, error, hint, className = '', children })
       <label className="ledger-label block" htmlFor={htmlFor}>{label}</label>
       <div className="mt-1.5">{children}</div>
       {hint && !error && <p className="mt-1.5 text-xs text-on-surface-variant">{hint}</p>}
-      {error && <p className="mt-1.5 text-sm text-red-800" id={`${htmlFor}-error`} role="alert">{error}</p>}
+      {error && <p aria-live="assertive" className="mt-1.5 text-sm text-red-800" id={`${htmlFor}-error`} role="alert">{error}</p>}
     </div>
   );
 }

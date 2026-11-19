@@ -65,11 +65,14 @@ const salesOrders = [
       { sku: 'DUM-003', name: 'Barang Dummy C', qtyOrdered: 8, qtyReceived: 8, qtyShipped: 5, qtyInvoiced: 2, unitPrice: 275000 },
       { sku: 'DUM-005', name: 'Barang Dummy E', qtyOrdered: 3, qtyReceived: 3, qtyShipped: 3, qtyInvoiced: 3, unitPrice: 125000 },
     ],
-    totalAmount: 2575000, status: 'GOODS_RECEIVED', createdAt: now,
+    totalAmount: 1750000, status: 'SHIPPED', createdAt: now,
   },
 ];
 
 let sequence = 4;
+let invoiceSequence = 0;
+const invoices = [];
+const payments = [];
 
 function json(response, status, payload) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
@@ -288,6 +291,46 @@ async function handle(request, response) {
         salesOrder: { id: salesOrder.id, soNumber: salesOrder.soNumber, status: salesOrder.status },
       }, 201);
     }
+  }
+
+  if (path === '/api/invoices' && method === 'GET') {
+    if (!['ADMIN', 'AR', 'SALES'].includes(user.role)) return fail(response, 403, 'Forbidden');
+    const status = url.searchParams.get('status');
+    const rows = invoices.filter((item) => !status || item.status === status);
+    return ok(response, { invoices: rows, total: rows.length, page: 1, limit: 100 });
+  }
+  if (path === '/api/invoices' && method === 'POST') {
+    if (!['ADMIN', 'AR'].includes(user.role)) return fail(response, 403, 'Forbidden');
+    const body = await readJson(request);
+    const so = salesOrders.find((item) => item.id === body.soId);
+    if (!so) return fail(response, 404, 'Sales Order not found');
+    if (!['SHIPPED', 'DO_RETURNED', 'COMPLETED'].includes(so.status)) return fail(response, 409, 'Sales Order cannot be invoiced');
+    if (invoices.some((item) => item.soId === so.id && item.status !== 'VOID')) return fail(response, 409, 'Active invoice already exists');
+    invoiceSequence += 1;
+    const invoice = { _id: `inv-${invoiceSequence}`, invoiceNumber: `INV-2026-11-${String(invoiceSequence).padStart(4, '0')}`, soId: so.id, soNumber: so.soNumber, customerId: so.customerId, customerName: so.customerName, items: so.items.map((item, index) => ({ soItemIndex: index, sku: item.sku, name: item.name, qty: item.qtyShipped || item.qtyOrdered, unitPrice: item.unitPrice, totalPrice: (item.qtyShipped || item.qtyOrdered) * item.unitPrice })), totalAmount: so.totalAmount, paidAmount: 0, status: 'ISSUED', dueDate: body.dueDate, issuedBy: user.id, createdAt: new Date().toISOString() };
+    invoices.unshift(invoice); so.status = 'INVOICING';
+    return ok(response, { invoice }, 201);
+  }
+  const invoiceMatch = path.startsWith('/api/invoices/') ? path.slice('/api/invoices/'.length) : null;
+  if (invoiceMatch && method === 'GET' && invoiceMatch !== 'payments') {
+    if (!['ADMIN', 'AR', 'SALES'].includes(user.role)) return fail(response, 403, 'Forbidden');
+    const invoice = invoices.find((item) => item._id === invoiceMatch);
+    return invoice ? ok(response, { invoice, payments: payments.filter((item) => item.invoiceId === invoice._id), outstandingAmount: invoice.totalAmount - invoice.paidAmount }) : fail(response, 404, 'Invoice not found');
+  }
+  if (path === '/api/invoices/payments' && method === 'POST') {
+    if (!['ADMIN', 'AR'].includes(user.role)) return fail(response, 403, 'Forbidden');
+    const body = await readJson(request);
+    const invoice = invoices.find((item) => item._id === body.invoiceId);
+    if (!invoice) return fail(response, 404, 'Invoice not found');
+    const amount = Number(body.amount);
+    const outstanding = invoice.totalAmount - invoice.paidAmount;
+    if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) return fail(response, 409, 'Payment exceeds outstanding balance');
+    invoice.paidAmount += amount;
+    invoice.status = invoice.paidAmount >= invoice.totalAmount ? 'PAID' : 'PARTIALLY_PAID';
+    if (invoice.status === 'PAID') { const so = salesOrders.find((item) => item.id === invoice.soId); if (so) so.status = 'PAID'; }
+    const payment = { _id: `pay-${payments.length + 1}`, paymentNumber: `PAY-2026-11-${String(payments.length + 1).padStart(4, '0')}`, invoiceId: invoice._id, soId: invoice.soId, amount, paymentMethod: body.paymentMethod, paidAt: body.paidAt || new Date().toISOString(), receivedBy: user.id };
+    payments.unshift(payment);
+    return ok(response, { payment, invoice, outstandingAmount: invoice.totalAmount - invoice.paidAmount }, 201);
   }
 
   if (path === '/api/sales-orders' && method === 'GET') {

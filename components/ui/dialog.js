@@ -34,7 +34,7 @@ export function Dialog({ open, onClose, title, description, children, wide = fal
         </div>
         <button
           aria-label="Tutup dialog"
-          className="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
           onClick={onClose}
           type="button"
         >
