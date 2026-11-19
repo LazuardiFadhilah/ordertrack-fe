@@ -293,6 +293,14 @@ async function handle(request, response) {
     }
   }
 
+  if (path === '/api/vendor-pos' && method === 'GET') {
+    return paginate(response, [{ id: 'vpo1', vendorPoNumber: 'VPO-2026-11-0001', vendorName: 'CV Dummy Supply', status: 'SENT', totalAmount: 850000 }], url);
+  }
+
+  if (path === '/api/shipping/shipping-requests' && method === 'GET') {
+    return paginate(response, [{ id: 'sr1', srNumber: 'SR-2026-11-0001', customerName: 'PT Dummy Nusantara', status: 'REQUESTED' }], url);
+  }
+
   if (path === '/api/invoices' && method === 'GET') {
     if (!['ADMIN', 'AR', 'SALES'].includes(user.role)) return fail(response, 403, 'Forbidden');
     const status = url.searchParams.get('status');

@@ -38,7 +38,7 @@ npm run build
 - Desktop: [`docs/screenshots/ordertrack-desktop.png`](docs/screenshots/ordertrack-desktop.png)
 - Mobile: [`docs/screenshots/ordertrack-mobile.png`](docs/screenshots/ordertrack-mobile.png)
 
-Screenshot diambil dari aplikasi lokal yang berjalan, menggunakan fixture dummy.
+Screenshot diambil dari aplikasi lokal yang berjalan, menggunakan fixture dummy. Login dokumentasi: `admin@example.test` dengan password demonstrasi apa pun; data dan akun tidak nyata.
 
 ## Environment
 
